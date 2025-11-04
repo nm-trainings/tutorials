@@ -40,7 +40,7 @@ After downloading R, please download RStudio from following link.
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Sv2BMAGe2fE?si=cIjK9p6sw9ZR3n8D&amp;start=143" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 
-## 3. Install R packages
+## 4. Install R packages
 
 Please, install following packages only if you're able to.
 
