@@ -42,7 +42,7 @@ After downloading R, please download RStudio from following link.
 
 ## 4. Install R packages
 
-Please, install following packages only if you're able to.
+Please, install following packages.
 
 For this, Open RStudio \> Go to R console \> Copy/paste following codes.
 
