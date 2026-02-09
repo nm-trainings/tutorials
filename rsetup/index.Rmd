@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 1. Install R v4.5.1 (Latest)
+## 1. Install R v4.5.2 (Latest)
 
 Please, download the latest R version based on the system you use.
 
@@ -35,7 +35,7 @@ After downloading R, please download RStudio from following link.
 
 ## 3. Install R Tools 4.5 (Only for Windows User)
 
-- [**Download R Tools**](https://cran.r-project.org/bin/windows/Rtools/rtools45/files/rtools45-6608-6492.exe){target="_blank"}
+- [**Download R Tools**](https://cran.r-project.org/bin/windows/Rtools/rtools45/files/rtools45-6768-6492.exe){target="_blank"}
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/Sv2BMAGe2fE?si=cIjK9p6sw9ZR3n8D&amp;start=143" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
