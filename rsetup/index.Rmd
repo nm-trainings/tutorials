@@ -13,7 +13,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## 1. Install R v4.5.2 (Latest)
+## 1. Install R v4.5.3 (Latest)
 
 Please, download the latest R version based on the system you use.
 
