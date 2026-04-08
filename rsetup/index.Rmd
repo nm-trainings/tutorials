@@ -46,12 +46,18 @@ Please, install following packages.
 
 For this, Open RStudio \> Go to R console \> Copy/paste following codes.
 
-```         
-
-install.packages("remotes"); remotes::install_github("bjungbogati/rsetup");
+ˆ
+```
+install.packages("tidyverse")
 ```
 
-![](images/image.png){width="100%"}
+
+<!-- ```          -->
+
+<!-- install.packages("remotes"); remotes::install_github("bjungbogati/rsetup"); -->
+<!-- ``` -->
+
+<!-- ![](images/image.png){width="100%"} -->
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/UZdD94p5SRQ?si=d_INAENazSZoA9mG&amp;start=4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
 
