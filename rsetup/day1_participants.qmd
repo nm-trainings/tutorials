@@ -1,0 +1,594 @@
+---
+title: "R in Action: Code, Analyze & Contribute"
+subtitle: "Day 1 — Getting Started with R | Participant Workbook"
+author: "R User Group Nepal"
+date: "April 9, 2026"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+---
+
+# DAY 1 — Thursday, April 9
+
+**R User Group Nepal × Kathmandu University Biotechnology Creatives** *Online · 8:00 PM – 10:00 PM (Nepal Standard Time)*
+
+------------------------------------------------------------------------
+
+## 👋 Welcome & About R User Group Nepal
+
+**R User Group Nepal (RUG Nepal)** is a community of students, researchers, and professionals who learn and use R together across Nepal.
+
+-   Makes data analysis accessible to Nepali students and researchers
+-   Organizes workshops, seminars, and open-source events like this one
+-   Connected to the global R community through the R Consortium
+-   **You are now part of this community** — welcome!
+
+> *"You don't need to be an expert to join. You just need to be curious."*
+
+------------------------------------------------------------------------
+
+## 🧑‍🏫 Know Your Instructor
+
+You can connect with him over: <https://linkedin.com/in/bjungbogati>
+
+------------------------------------------------------------------------
+
+## 🌍 Why R? Where Is It Actually Used?
+
+R is used every day in real science and research:
+
+| Field                 | What R Does There                                |
+|-----------------------|--------------------------------------------------|
+| **Biotechnology**     | Analyze lab measurements, patient test results   |
+| **Bioinformatics**    | Process genomic and health data                  |
+| **Public Health**     | Track disease outbreaks, analyze patient records |
+| **Pharmaceuticals**   | Clinical trial statistics, drug analysis         |
+| **Agriculture**       | Crop and environmental data analysis             |
+| **Academic Research** | Write fully reproducible papers and reports      |
+
+Organizations actively using R:
+
+-   **Pfizer, Novartis, Roche** — clinical trial analysis
+-   **WHO, CDC** — disease surveillance and epidemiology
+-   **Universities worldwide** — research and publishing
+
+> 💡 R is not just a student tool. It runs in real labs, hospitals, and companies — including research affecting health outcomes in Nepal.
+
+------------------------------------------------------------------------
+
+## 📌 Why R for YOU?
+
+You may already use Excel in your courses. That is fine for small tasks. But consider this:
+
+**Situation:** You collect **vital signs** (blood pressure, heart rate, glucose) for 50 patients. Your supervisor asks you to:
+
+1.  Calculate average blood pressure per age group
+2.  Flag patients with high risk (BP \> 140 mmHg)
+3.  Make a comparison chart for the report
+4.  Redo everything when 5 records are removed
+
+|                          | Excel        | R                      |
+|--------------------------|--------------|------------------------|
+| Time to complete         | \~45 minutes | \~2 minutes            |
+| Risk of click errors     | High         | Very low               |
+| Redo after change        | Start over   | Run the script again   |
+| Shareable & reproducible | Difficult    | Yes — share the script |
+
+------------------------------------------------------------------------
+
+## ⚙️ Setup: Install R and RStudio
+
+> **If you already installed both, skip ahead to "Let's Look at RStudio."**
+
+**Step 1 — Install R:** <https://cran.r-project.org>
+
+**Step 2 — Install RStudio:** <https://posit.co/download/rstudio-desktop>
+
+> ✅ Open RStudio. If you see 3 or 4 panels — you are ready.
+
+------------------------------------------------------------------------
+
+## 🖥️ Let's Look at RStudio
+
+RStudio has **4 panes**:
+
+```         
+┌───────────────────────┬──────────────────────┐
+│   Source / Script     │    Environment       │
+│   (write code here)   │  (your variables)    │
+├───────────────────────┼──────────────────────┤
+│   Console             │   Files / Plots /    │
+│   (output appears)    │   Packages / Help    │
+└───────────────────────┴──────────────────────┘
+```
+
+| Pane | What You Use It For |
+|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| **Source / Script** (top-left) | Write and save your code |
+| **Console** (bottom-left) | See output after running code |
+| **Environment** (top-right) | All variables and datasets you created |
+| **Files / Plots / Help** (bottom-right) | Browse files, view graphs, read help |
+
+------------------------------------------------------------------------
+
+## ✍️ Writing Your First Code
+
+Open a Quarto document: `File → New File → Quarto Document` → save as `first_code.qmd`
+
+Press **Ctrl + Enter** (Windows) or **Cmd + Enter** (Mac) to run each line:
+
+```{r}
+# The # symbol starts a comment — R ignores it.
+# Always comment your code!
+
+# R as a calculator
+2 + 3
+10 / 2
+3 ^ 2
+
+# A health example:
+# A nurse recorded systolic blood pressure for 3 patients.
+# Systolic BP is the top number in a blood pressure reading (e.g., 118 in 118/78).
+# Let's calculate the average:
+
+
+(118 + 125 + 122) / 3
+```
+
+------------------------------------------------------------------------
+
+## 📦 Install and Load Packages
+
+R comes with basic built-in functions. **Packages** add extra tools — like installing apps on a phone.
+
+```{r}
+# Install a package — do this ONCE (like downloading an app)
+# install.packages("tidyverse")
+
+# Load a package — do this EVERY session (like opening the app)
+library(tidyverse)
+```
+
+**What is `tidyverse`?** A collection of packages for loading, cleaning, analyzing, and visualizing data:
+
+| Package   | What It Does                     |
+|-----------|----------------------------------|
+| `readr`   | Read CSV and data files          |
+| `dplyr`   | Filter, sort, and summarize data |
+| `tidyr`   | Reshape data                     |
+| `ggplot2` | Create graphs and plots          |
+| `stringr` | Work with text                   |
+
+------------------------------------------------------------------------
+
+## 📦 Create a Project in RStudio
+
+1.  Click `File` → `New Project`
+2.  Select `New Directory` → `New Project`
+3.  Name your project: **`r_training`**
+4.  Click `Create Project`
+
+------------------------------------------------------------------------
+
+## 📊 Your First Plot
+
+```{r}
+# Load a built-in dataset about iris flowers
+data(iris)
+
+# What does it look like?
+head(iris)
+
+# Make a scatter plot
+plot(iris$Sepal.Length, iris$Petal.Length,
+     main = "Sepal Length vs Petal Length",
+     xlab = "Sepal Length (cm)",
+     ylab = "Petal Length (cm)",
+     col  = "steelblue",
+     pch  = 16)
+```
+
+> You just created a scientific scatter plot with 4 lines of code!
+
+------------------------------------------------------------------------
+
+# Intro to R Programming
+
+Now let us learn how R actually thinks, so you can write code with confidence.
+
+------------------------------------------------------------------------
+
+## 📋 Things to Remember
+
+-   R is **case-sensitive**: `Patient` and `patient` are different
+-   Code runs **line by line** from top to bottom
+-   **Errors are normal** — they are messages, not failures
+-   The `#` starts a comment — write comments generously
+
+------------------------------------------------------------------------
+
+## 🚫 Reserved Words
+
+Some words belong to R — you cannot use them as variable names:
+
+```         
+TRUE    FALSE    NULL    NA    Inf    NaN
+if      else     for     while  function  return
+```
+
+```{r}
+#| error: true
+# ❌ This will cause an error — TRUE is reserved
+TRUE <- 5
+```
+
+```{r}
+# ✅ This is fine
+is_hypertensive <- TRUE
+is_hypertensive
+```
+
+------------------------------------------------------------------------
+
+## 📦 Variables
+
+A **variable** is a named container that holds a value. You create one using `<-`:
+
+```{r}
+# Storing patient vital signs
+patient_name   <- "Sumana"    # text
+systolic_bp    <- 118               # number (mmHg)
+is_diabetic    <- FALSE             # yes/no
+num_patients   <- 50L               # whole number (integer)
+
+# Print a variable — just type its name
+patient_name
+systolic_bp
+```
+
+You can update a variable by assigning a new value:
+
+```{r}
+systolic_bp <- 118    # first measurement
+systolic_bp
+
+systolic_bp <- 122    # re-checked
+systolic_bp
+```
+
+R also has built-in constants:
+
+```{r}
+pi      # 3.14159...
+NA      # missing value
+Inf     # infinity
+```
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 01 — Variables
+
+*(2 minutes)*
+
+```{r}
+# 1. Store your own name
+my_name <- ""
+my_name
+
+# 2. Store a systolic blood pressure reading (in mmHg) — try 118
+systolic_bp <- 
+systolic_bp
+
+# 3. Store whether a patient has diabetes (TRUE or FALSE)
+is_diabetic <- 
+is_diabetic
+
+# 4. What happens when you type Systolic_bp instead of systolic_bp?
+#    Try it and read the error message carefully.
+Systolic_bp
+```
+
+> 🔍 **Discussion:** What did the error say? Can you explain what went wrong?
+
+------------------------------------------------------------------------
+
+## 🏷️ Naming Convention
+
+In R, the recommended style is **snake_case** — all lowercase with underscores:
+
+| ✅ Good name    | ❌ Avoid       | Why to avoid               |
+|-----------------|----------------|----------------------------|
+| `systolic_bp`   | `SystolicBP`   | Hard to read               |
+| `patient_count` | `patientcount` | No separation              |
+| `is_diabetic`   | `is diabetic`  | Spaces cause errors        |
+| `heart_rate`    | `1heart_rate`  | Cannot start with a number |
+| `blood_glucose` | `bg`           | Too short — unclear        |
+
+> **Rule of thumb:** Would a classmate understand your variable name without explanation?
+
+------------------------------------------------------------------------
+
+## 🔢 Data Types
+
+R stores different kinds of values differently:
+
+| Type        | What It Stores   | Health Example                                |
+|------------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `numeric`   | Decimal numbers  | Blood pressure: `118.5`, glucose: `98.0`      |
+| `integer`   | Whole numbers    | 50 patients: `50L`, 12 visits: `12L`          |
+| `character` | Text (in quotes) | Patient name: `"Avishek"`, status: `"Normal"` |
+| `logical`   | TRUE or FALSE    | Is diabetic: `TRUE`, Is smoker: `FALSE`       |
+| `factor`    | Categories       | Risk: `"Low"`, `"Medium"`, `"High"`           |
+
+```{r}
+# Check what type a value is
+class(118.5)       # "numeric"
+class("Avishek")     # "character"
+class(TRUE)        # "logical"
+class(50L)         # "integer"
+
+systolic_bp <- 118
+class(systolic_bp) # "numeric"
+```
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 02 — Data Types
+
+*(2 minutes)*
+
+```{r}
+# Guess the type first, then check with class()
+class(98.6)
+class("Normal")
+class(FALSE)
+class(10L)
+class("10")       # Is this different from 10? Why?
+```
+
+```{r}
+# Create these variables and check their types
+patient_name   <- #"Asia"
+num_visits     <- #5L
+is_healthy      <- #TRUE
+bmi_value      <- #20.5
+
+class(patient_name)
+class(num_visits)
+class(is_healthy)
+```
+
+> 🔍 **Key question:** `class("10")` vs `class(10)` — what is different? Why might it matter in data analysis?
+
+------------------------------------------------------------------------
+
+## 🗂️ Data Structures
+
+How R organizes multiple values:
+
+| Structure | What It Is | When You Use It |
+|------------------------|--------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+| **Vector** | A sequence of values, same type | 6 BP readings from an experiment |
+| **Data Frame** | A table — rows and columns | Your full patient dataset |
+| **List** | Can hold mixed types | Complex analysis results |
+
+> For Days 1–2, we focus on **vectors** and **data frames**.
+
+------------------------------------------------------------------------
+
+## 📐 Vectors
+
+A **vector** is a sequence of values, all the same type. Created with `c()` (combine):
+
+```{r}
+# Systolic blood pressure readings for 6 patients (mmHg)
+systolic_bp <- c(118, 125, 132, 145, 110, 138)
+
+# Patient names
+patient_names <- c("Avishek", "Bikash", "Chitra",
+                   "Dev", "Elina", "Farhan")
+
+# Patient group
+groups <- c("Control", "Control", "Control",
+            "High Risk", "High Risk", "High Risk")
+```
+
+**Working with vectors:**
+
+```{r}
+length(systolic_bp)  # how many patients?
+mean(systolic_bp)    # average BP
+max(systolic_bp)     # highest reading
+min(systolic_bp)     # lowest reading
+```
+
+**Accessing specific values** — use square brackets `[]`:
+
+```{r}
+systolic_bp[1]         # first patient
+systolic_bp[3]         # third patient
+systolic_bp[1:3]       # first three
+systolic_bp[c(1, 4)]   # first and fourth
+```
+
+> 💡 Patients 4–6 are in the High Risk group. Patient 4 (145 mmHg) already stands out as having elevated blood pressure — you can see this just by looking at the vector.
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 03 — Vectors
+
+*(3 minutes)*
+
+Create a vector called `heart_rate` with the following values:
+
+``` r
+72, 85, 68, 91, 78, 88, 74, 95
+```
+
+```{r}
+# A nurse recorded resting heart rate (bpm) for 8 patients.
+# Patients 1–4: standard care group
+# Patients 5–8: intensive monitoring group
+
+# values of hear_rate = 72, 85, 68, 91, 78, 88, 74, 95
+
+heart_rate <- 
+
+# 1. How many patients?
+length()
+
+# 2. Average heart rate across all patients?
+mean()
+
+# 3. Highest and lowest reading?
+max()
+min()
+
+# 4. Standard care group (first 4 patients)
+heart_rate[1:4]
+
+# 5. Intensive monitoring group (last 4 patients)
+heart_rate[5:8]
+
+# 6. Average for each group separately
+mean(heart_rate[1:])
+mean(heart_rate[:8])
+
+# 7. Is the intensive monitoring group average higher?
+mean(heart_rate[5:8]) > mean(heart_rate[1:4])
+```
+
+> 🔍 **What do you observe?** Which group has a higher average heart rate? What might that mean?
+
+------------------------------------------------------------------------
+
+## ➕ Operators
+
+**Arithmetic Operators:**
+
+```{r}
+10 + 3     # addition
+10 - 3     # subtraction
+10 * 3     # multiplication
+10 / 3     # division
+10 ^ 2     # power
+10 %% 3    # remainder
+```
+
+**Relational Operators** — always return TRUE or FALSE:
+
+```{r}
+118 < 140     # Is this BP below high threshold?
+155 > 140     # Is this BP above high threshold?
+118 == 118    # Are these equal? (double ==)
+118 != 140    # Are these NOT equal?
+118 >= 110    # Is 118 >= 110?
+```
+
+> ⚠️ `=` assigns values. `==` compares values. These are different!
+
+**Logical Operators:**
+
+```{r}
+# AND — both conditions must be true
+118 > 90 & 118 < 140    # Is BP in the normal range?
+
+# OR — at least one must be true
+165 < 70 | 165 > 160    # Is BP dangerously out of range?
+
+# NOT — reverses the result
+!TRUE
+!FALSE
+```
+
+**Practical example — flag a patient:**
+
+```{r}
+bp <- 165
+
+# Flag if BP is dangerously low OR dangerously high
+bp < 70 | bp > 160    # TRUE — this patient needs urgent attention
+```
+
+------------------------------------------------------------------------
+
+## 📐 Operators on Vectors
+
+One line of R operates on ALL values at once:
+
+```{r}
+systolic_bp <- c(118, 125, 132, 145, 110, 138)
+normal_avg  <- 120   # average normal systolic BP
+
+# How much above/below average is each patient?
+deviation <- systolic_bp - normal_avg
+deviation
+
+# Flag patients above 140 mmHg (hypertension threshold)
+systolic_bp > 140
+```
+
+> 💡 In Excel, you would write this formula in 6 separate cells. In R, one line handles all patients at once.
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn — Day 1 Final Exercise
+
+*(5 minutes)*
+
+```{r}
+# A clinic measured fasting blood glucose (mg/dL) for 8 patients.
+# Patients 1–4: standard diet group
+# Patients 5–8: low-carb diet group
+# Normal fasting glucose reference: 90 mg/dL
+
+glucose <- c(95, 102, 88, 99, 78, 83, 81, 76)
+
+# 1. How many patients are there?
+
+
+# 2. What is the average glucose across all patients?
+
+
+# 3. Calculate how much each patient deviates from the 90 mg/dL reference
+deviation
+
+# 4. Average for the standard diet group (patients 1–4)
+
+
+# 5. Average for the low-carb group (patients 5–8)
+
+
+# 6. Is the low-carb group average lower?
+
+
+# 7. Create a character vector for diet_groups
+c("Standard","Standard","Standard","Standard",
+                "Low-Carb","Low-Carb","Low-Carb","Low-Carb")
+
+
+```
+
+------------------------------------------------------------------------
+
+## 🏠 Homework Before Day 2
+
+1.  Create a vector of 5 **body temperature** readings (°C) from a pretend patient group
+2.  Calculate the `mean`, `max`, and `min`
+3.  Create a character vector with patient IDs: `"P01"`, `"P02"`, `"P03"`, `"P04"`, `"P05"`
+4.  Write a comment at the top of your script describing the patient group
+
+------------------------------------------------------------------------
+
+## 📌 Day 1 Recap
+
+| Concept           | What You Learned                                        |
+|-------------------|---------------------------------------------------------|
+| R vs RStudio      | R is the language; RStudio is the workspace             |
+| Script vs Console | Write in Script, output appears in Console              |
+| Variables         | Store values with `<-`                                  |
+| Data Types        | numeric, character, logical, integer, factor            |
+| Vectors           | Store multiple values with `c()`                        |
+| Operators         | Arithmetic, relational (`>`, `==`), logical (`&`, `\|`) |
