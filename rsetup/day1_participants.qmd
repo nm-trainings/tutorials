@@ -105,7 +105,7 @@ RStudio has **4 panes**:
 ```
 
 | Pane | What You Use It For |
-|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+|----|----|
 | **Source / Script** (top-left) | Write and save your code |
 | **Console** (bottom-left) | See output after running code |
 | **Environment** (top-right) | All variables and datasets you created |
@@ -315,7 +315,7 @@ In R, the recommended style is **snake_case** — all lowercase with underscores
 R stores different kinds of values differently:
 
 | Type        | What It Stores   | Health Example                                |
-|------------------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------|
+|-------------|------------------|-----------------------------------------------|
 | `numeric`   | Decimal numbers  | Blood pressure: `118.5`, glucose: `98.0`      |
 | `integer`   | Whole numbers    | 50 patients: `50L`, 12 visits: `12L`          |
 | `character` | Text (in quotes) | Patient name: `"Avishek"`, status: `"Normal"` |
@@ -369,7 +369,7 @@ class(is_healthy)
 How R organizes multiple values:
 
 | Structure | What It Is | When You Use It |
-|------------------------|--------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
+|----|----|----|
 | **Vector** | A sequence of values, same type | 6 BP readings from an experiment |
 | **Data Frame** | A table — rows and columns | Your full patient dataset |
 | **List** | Can hold mixed types | Complex analysis results |

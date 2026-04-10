@@ -1,0 +1,1085 @@
+---
+title: "R in Action: Code, Analyze & Contribute"
+subtitle: "Day 3 — Real Data: Import, Clean & Reshape | Participant Workbook"
+author: "Binod Jung Bogati - R User Group Nepal"
+date: "April 11, 2026"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+---
+
+# DAY 3 — Saturday, April 11
+
+**In-Person · 9:00 AM – 4:00 PM (Nepal Standard Time)**
+
+**What you will be able to do after today:**
+
+-   Load data from CSV files into R
+-   Handle missing values (`NA`) confidently
+-   Write clean, readable code using the pipe `%>%`
+-   Filter, select, sort, group, and summarize data with `dplyr`
+-   Categorize values with `if_else()` and `case_when()`
+-   Join two related datasets
+-   Reshape data between wide and long format using `tidyr`
+
+> 💡 **How to use this workbook:**\
+> - Each **Your Turn** section has starter code with blanks (`___`) or empty for you to fill in.\
+> - Read the hint comments carefully.\
+> - Run code as you fill it in — do not wait until everything is complete before running.
+
+------------------------------------------------------------------------
+
+## 📋 Today's Dataset — Community Health Screening
+
+> **Dataset description:** A community health screening across three Kathmandu Valley districts. Eight adult patients visited a local health post. We recorded age, gender, systolic BP (mmHg), resting heart rate (bpm), fasting blood glucose (mg/dL), and district.
+>
+> **Clinical reference ranges:**
+>
+> \- **Systolic BP (mmHg):** Normal \<120 · Elevated 120–129 · High Stage 1: 130–139 · High Stage 2: ≥140
+>
+> \- **Glucose (mg/dL):** Normal \<100 · Pre-diabetic 100–125 · Diabetic ≥126
+
+```{r}
+library(tidyverse)
+
+patients <- read_csv("data/patients.csv", show_col_types = FALSE)
+```
+
+```{r}
+head(patients)
+```
+
+```{r}
+glimpse(patients)
+```
+
+```{r}
+summary(patients)
+```
+
+------------------------------------------------------------------------
+
+## PART 1 — Data Import & Export
+
+------------------------------------------------------------------------
+
+### 📁 RStudio Projects
+
+```         
+r_workshop/
+├── data/       ← all CSV and Excel files go here
+├── scripts/    ← your R scripts go here
+├── plots/      ← saved figures go here
+└── r_workshop.Rproj   ← always open this to start
+```
+
+**Create:** `File → New Project → New Directory → New Project → Name: r_workshop`
+
+> ✅ Always open the `.Rproj` file to start your session.
+
+------------------------------------------------------------------------
+
+### 📥 Loading Data
+
+```{r}
+#| eval: false
+
+library(tidyverse)
+
+# Load a CSV file — read_csv() is faster and cleaner than read.csv()
+patients <- read_csv("data/patients.csv", show_col_types = FALSE)
+
+# Load an Excel file
+library(readxl)
+lab_data <- read_excel("data/lab_results.xlsx")
+```
+
+```{r}
+#| eval: false
+
+# After loading, ALWAYS run these three checks:
+head(patients)        # first 6 rows — does it look right?
+glimpse(patients)     # column types — are numbers stored as numbers?
+summary(patients)     # quick statistics per column
+```
+
+------------------------------------------------------------------------
+
+### 📤 Saving Data
+
+```{r}
+#| eval: false
+
+# Save as CSV with a new name — NEVER overwrite the original
+write_csv(patients, "data/patients_cleaned.csv")
+```
+
+------------------------------------------------------------------------
+
+## PART 2 — Handling Missing Values (`NA`)
+
+------------------------------------------------------------------------
+
+> ⚠️ Any calculation that includes `NA` returns `NA` by default. Always check before analyzing.
+
+```{r}
+# Load a messy dataset that has missing values
+patients_messy <- read_csv("data/patients_messy.csv", show_col_types = FALSE)
+patients_messy
+```
+
+```{r}
+# Detect where NAs are
+is.na(patients_messy$age)         # TRUE for each NA position
+sum(is.na(patients_messy))        # total NAs across whole dataset
+colSums(is.na(patients_messy))    # NAs counted per column
+```
+
+```{r}
+# NA breaks calculations — na.rm = TRUE fixes it
+mean(patients_messy$age)                   # → NA  (broken!)
+mean(patients_messy$age, na.rm = TRUE)     # → works correctly
+```
+
+```{r}
+# Remove ALL rows that have any missing value
+patients_messy %>%
+  drop_na()
+```
+
+```{r}
+# Remove rows only where a SPECIFIC column is missing
+patients_messy %>%
+  drop_na(systolic)
+```
+
+```{r}
+# Replace NA with a calculated value
+patients_messy %>%
+  mutate(
+    age      = replace_na(age, mean(age, na.rm = TRUE)),
+    systolic = replace_na(systolic, median(systolic, na.rm = TRUE))
+  )
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 01 — Missing Values *(5 minutes)*
+
+> **Instructions:** Fill in the blanks (`___`). Each blank has a hint in the comment above it.
+
+```{r}
+# Load the survey dataset
+survey <- read_csv("data/survey.csv", show_col_types = FALSE)
+survey
+```
+
+```{r}
+# 1. How many NAs are in each column?
+#    Hint: colSums(is.na(DATASET_NAME))
+colSums(is.na(___))
+```
+
+```{r}
+# 2. What is the average age? (use na.rm = TRUE to ignore NAs)
+#    Hint: mean(survey$age, na.rm = TRUE)
+mean(___, na.rm = ___)
+```
+
+```{r}
+# 3. Drop ALL rows that have any NA — how many rows remain?
+survey %>%
+  drop_na()
+```
+
+```{r}
+# 4. Drop rows only where weight_kg is missing
+#    Hint: drop_na(COLUMN_NAME)
+survey %>%
+  drop_na(___)
+```
+
+```{r}
+# 5. ★ Replace NA in age with the MEDIAN age
+#       Replace NA in smoker with "Unknown"
+#    Hint: replace_na(age, median(age, na.rm = TRUE))
+survey %>%
+  mutate(
+    age    = replace_na(age, median(___, na.rm = TRUE)),
+    smoker = replace_na(smoker, ___)
+  )
+```
+
+------------------------------------------------------------------------
+
+## PART 3 — The Pipe and `dplyr` Verbs
+
+------------------------------------------------------------------------
+
+The pipe `%>%` passes the result of one step into the next — read it as **"and then"**.
+
+```{r}
+#| eval: false
+
+# Without pipe — nested and hard to read
+arrange(filter(select(patients, name, age, systolic), systolic >= 140), age)
+```
+
+```{r}
+# With pipe — reads like steps from top to bottom
+patients %>%
+  select(name, age, systolic) %>%
+  filter(systolic >= 140) %>%
+  arrange(age)
+```
+
+> ⌨️ Shortcut: **Ctrl + Shift + M** (Windows) / **Cmd + Shift + M** (Mac)
+
+------------------------------------------------------------------------
+
+### `select()` — Choose Columns
+
+```{r}
+# Keep specific columns by name
+patients %>% select(name, age, systolic)
+```
+
+```{r}
+# Remove a column with minus sign (-)
+patients %>% select(-patient_id)
+```
+
+```{r}
+# Keep columns whose names match a pattern
+patients %>% select(starts_with("g"))    # → glucose, gender
+patients %>% select(ends_with("e"))      # → name, glucose, age
+```
+
+------------------------------------------------------------------------
+
+### `filter()` — Choose Rows
+
+```{r}
+# Hypertensive patients (Stage 2: systolic >= 140)
+patients %>% filter(systolic >= 140)
+```
+
+```{r}
+# Female patients in Kathmandu
+patients %>% filter(gender == "F" & district == "Kathmandu")
+```
+
+```{r}
+# From Lalitpur OR Bhaktapur (%in% checks a list)
+patients %>% filter(district %in% c("Lalitpur", "Bhaktapur"))
+```
+
+**Logical operators:**
+
+| Operator | Meaning | Example |
+|-----------------|------------------------------------------|-------------|
+| `==` | Equal to | `gender == "F"` |
+| `!=` | Not equal | `district != "Kathmandu"` |
+| `>` / `<` | Greater / less | `age > 40` |
+| `>=` / `<=` | Equal or more / less | `systolic >= 140` |
+| `&` | AND — both true | `age > 40 & gender == "F"` |
+| `\|` | OR — at least one true | `age < 25 \| age > 60` |
+| `%in%` | Matches value in a list | `district %in% c("Lalitpur","Bhaktapur")` |
+
+------------------------------------------------------------------------
+
+### `mutate()` — Add New Columns
+
+```{r}
+# Add a single column with if_else()
+patients %>%
+  mutate(
+    bp_status = if_else(systolic >= 140, "High", "Normal")
+  )
+```
+
+```{r}
+# Add multiple columns at once
+patients %>%
+  mutate(
+    bp_status      = if_else(systolic >= 140, "High", "Normal"),
+    glucose_status = if_else(glucose > 126, "Diabetic", "Normal"),
+    senior         = if_else(age >= 60, TRUE, FALSE)
+  )
+```
+
+------------------------------------------------------------------------
+
+### `arrange()` — Sort Rows
+
+```{r}
+# Sort by glucose — highest first
+patients %>% arrange(desc(glucose))
+```
+
+```{r}
+# Sort by district then age within each district
+patients %>% arrange(district, age)
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 02 — select, filter, mutate, arrange *(5 minutes)*
+
+> **Instructions:** Fill in column names and values. Column names do NOT need quotes. Text values like `"F"` or `"Kathmandu"` DO need quotes.
+
+```{r}
+# 1. Show name, age, and systolic for patients with systolic >= 130
+#    Hint: select(name, age, ___) then filter(systolic >= 130)
+patients %>%
+  select( ,  , ) %>%
+  filter( >= 130)
+```
+
+```{r}
+# 2. Add column "risk_flag":
+#    "At Risk" if systolic >= 140 OR (|) glucose > 126
+#    "Normal" otherwise
+patients %>%
+  mutate(risk_flag = if_else(
+     >= 140 |  > 126, "At Risk", "Normal"))
+```
+
+```{r}
+# 3. Sort by glucose descending, show only the top 3 rows
+#    Hint: arrange(desc(___)) then head(3)
+patients %>%
+  arrange(desc( )) %>%
+  head( )
+```
+
+```{r}
+# 4. ★ Female patients aged > 30, sorted by glucose (highest first)
+#    Show only: name, age, glucose, district
+patients %>%
+  filter(gender ==  &  > 30) %>%
+  arrange(desc( )) %>%
+  select( ,  ,  , )
+```
+
+------------------------------------------------------------------------
+
+### `group_by()` + `summarise()` — Calculate by Group
+
+```{r}
+# Average glucose — overall (one number)
+mean(patients$glucose)
+```
+
+```{r}
+# Average glucose — separately for each gender
+patients %>%
+  group_by(gender) %>%
+  summarise(avg_glucose = mean(glucose))
+```
+
+```{r}
+# Multiple statistics grouped by district
+patients %>%
+  group_by(district) %>%
+  summarise(
+    n_patients   = n(),
+    avg_age      = round(mean(age), 1),
+    avg_systolic = round(mean(systolic), 1),
+    avg_glucose  = round(mean(glucose), 1),
+    max_glucose  = max(glucose),
+    pct_high_bp  = round(mean(systolic >= 140) * 100, 1)
+  )
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 03 — group_by + summarise *(5 minutes)*
+
+> **Instructions:** Fill in the column name inside `group_by()` and inside each summary function. Use `n()` (no argument) to count rows, `mean(column)` for averages.
+
+```{r}
+# 1. Count how many patients are in each district
+patients %>%
+  group_by(___) %>%
+  summarise(count = n())
+```
+
+```{r}
+# 2. Average systolic and glucose by gender (round both to 1 decimal)
+#    Hint: group_by(gender) → summarise(avg_systolic = round(mean(systolic), 1), ...)
+patients %>%
+  group_by(___) %>%
+  summarise(
+    avg_systolic = round(mean(___), 1),
+    avg_glucose  = round(mean(___), 1)
+  )
+```
+
+```{r}
+# 3. ★ For each district: count patients, average glucose,
+#    AND percentage with glucose > 126 (diabetic range)
+#    Hint: mean(glucose > 126) gives proportion; multiply by 100 for %
+patients %>%
+  group_by(___) %>%
+  summarise(
+    n            = n(),
+    avg_glucose  = mean(___),
+    pct_diabetic = round(mean(___ > 126) * 100, 1)
+  ) %>%
+  arrange(desc(pct_diabetic))
+```
+
+------------------------------------------------------------------------
+
+## PART 4 — Helper Functions
+
+------------------------------------------------------------------------
+
+```{r}
+# distinct() — find unique values
+patients %>% distinct(district)
+patients %>% distinct(gender, district)
+```
+
+```{r}
+# count() — quick frequency table (shortcut for group_by + n())
+patients %>% count(district)
+patients %>% count(district, sort = TRUE)   # sorted by frequency
+```
+
+```{r}
+# slice() — pick rows by position or rank
+patients %>% slice(1:3)                     # first 3 rows
+patients %>% slice_max(glucose, n = 3)      # 3 highest glucose patients
+patients %>% slice_min(systolic, n = 2)     # 2 lowest BP patients
+patients %>% slice_sample(n = 4)            # 4 random rows
+```
+
+```{r}
+# n_distinct() — count unique values
+patients %>% summarise(n_districts = n_distinct(district))
+patients %>%
+  group_by(gender) %>%
+  summarise(n_districts = n_distinct(district))
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 04 — Helper Functions *(4 minutes)*
+
+> **Instructions:** Fill in the column name or number in each blank.
+
+```{r}
+# 1. How many unique districts are in the dataset?
+patients %>% distinct(___)
+```
+
+```{r}
+# 2. Frequency table of patients by district, sorted by count (sort = TRUE)
+patients %>% count(___, sort = ___)
+```
+
+```{r}
+# 3. Show the 2 patients with the HIGHEST glucose
+patients %>% slice_max(___, n = ___)
+```
+
+```{r}
+# 4. Show the 3 patients with the LOWEST systolic BP
+patients %>% slice_min(___, n = ___)
+```
+
+```{r}
+# 5. ★ How many unique genders are in each district?
+patients %>%
+  group_by(___) %>%
+  summarise(n_genders = n_distinct(___))
+```
+
+------------------------------------------------------------------------
+
+## PART 5 — Working with Text: `stringr`
+
+------------------------------------------------------------------------
+
+```{r}
+# str_detect — does the text contain a pattern? Returns TRUE/FALSE
+patients %>% filter(str_detect(district, "pur"))   # Lalitpur, Bhaktapur
+```
+
+```{r}
+# str_sub — extract characters by position
+str_sub("Kathmandu", 1, 5)    # → "Kathm"
+```
+
+```{r}
+# str_replace / str_remove
+str_replace("High BP", "High", "Elevated")   # → "Elevated BP"
+str_remove("P01_visit1", "_visit1")          # → "P01"
+```
+
+```{r}
+# str_to_upper / str_to_lower / str_to_title
+str_to_upper("anita")            # → "ANITA"
+str_to_title("anita sharma")     # → "Anita Sharma"
+```
+
+```{r}
+# str_trim — remove extra whitespace (common data entry problem)
+str_trim("  Kathmandu  ")        # → "Kathmandu"
+```
+
+```{r}
+# In mutate — create a district code from first 3 letters
+patients %>%
+  mutate(district_code = str_sub(district, 1, 3) %>% str_to_upper()) %>%
+  select(name, district, district_code)
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 05 — stringr *(4 minutes)*
+
+> **Instructions:** Fill in the blanks. For `str_to_upper()`, put the column name inside. For `str_replace()`, the format is `str_replace(column, "old_text", "new_text")`.
+
+```{r}
+
+# Load clinical notes dataset
+notes <- read_csv("data/notes.csv", show_col_types = FALSE)
+notes
+```
+
+```{r}
+
+# 1. Filter notes that mention "HIGH" (case sensitive)
+notes %>%
+  filter(str_detect(note, "HIGH"))
+```
+
+```{r}
+
+# 2. Convert all notes to UPPERCASE for consistency
+#    Hint: str_to_upper(COLUMN_NAME)
+notes %>%
+  mutate(note_clean = str_to_upper(___))
+```
+
+```{r}
+
+# 3. Replace "HIGH" with "ELEVATED" in all notes
+#    Hint: str_replace(note, "HIGH", "ELEVATED")
+notes %>%
+  mutate(note = str_replace(note, "HIGH", "___"))
+```
+
+```{r}
+
+# 4. ★ Extract the systolic number from each note
+#    Hint: str_extract(note, "[0-9]+") — matches the FIRST number found
+notes %>%
+  mutate(systolic_text = str_extract(note, "___"))
+```
+
+------------------------------------------------------------------------
+
+## PART 6 — Conditional Labeling
+
+------------------------------------------------------------------------
+
+```{r}
+
+# if_else() — exactly two categories
+patients %>%
+  mutate(bp_flag = if_else(systolic >= 140, "High", "Normal"))
+```
+
+```{r}
+# case_when() — three or more categories
+# The ~ (tilde) means "then"
+patients %>%
+  mutate(
+    bp_category = case_when(
+      systolic < 120                   ~ "Normal",
+      systolic >= 120 & systolic < 130 ~ "Elevated",
+      systolic >= 130 & systolic < 140 ~ "High Stage 1",
+      systolic >= 140                  ~ "High Stage 2"
+    )
+  )
+```
+
+> 💡 `case_when()` checks conditions from top to bottom. First match wins. `TRUE ~` is the catch-all.
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 06 — case_when() *(5 minutes)*
+
+> **Instructions:** Fill in the threshold numbers. Use the clinical reference ranges from the top of this document.
+
+```{r}
+# 1. Add "glucose_category" with 3 levels
+#    Normal: below 100 · Pre-diabetic: 100 to 125 · Diabetic: 126 and above
+patients %>%
+  mutate(
+    glucose_category = case_when(
+      glucose < ___                      ~ "Normal",
+      glucose >= ___ & glucose <= ___    ~ "Pre-diabetic",
+      glucose >= ___                     ~ "Diabetic"
+    )
+  )
+```
+
+```{r}
+# 2. Add "age_group" with 3 levels
+#    Young Adult: below 35 · Middle-aged: 35 to 55 · Senior: above 55
+patients %>%
+  mutate(age_group = case_when(
+    age < ___    ~ "Young Adult",
+    age <= ___   ~ "Middle-aged",
+    TRUE         ~ "___"           # TRUE = catch-all for anything that didn't match
+  ))
+```
+
+```{r}
+# 3. ★ Add "combined_risk" combining BOTH BP and glucose
+#    Dual Risk: systolic >= 140 AND glucose > 126
+#    High BP Only: systolic >= 140 only
+#    High Glucose Only: glucose > 126 only
+#    Normal: neither
+#    Then count how many patients fall into each group
+patients %>%
+  mutate(
+    combined_risk = case_when(
+      systolic >= ___ & glucose > ___ ~ "Dual Risk",
+      systolic >= ___                 ~ "High BP Only",
+      glucose > ___                   ~ "High Glucose Only",
+      TRUE                            ~ "Normal"
+    )
+  ) %>%
+  count(___)
+```
+
+------------------------------------------------------------------------
+
+## PART 7 — Joining Datasets
+
+------------------------------------------------------------------------
+
+> In real health work, data lives in separate tables connected by a shared column (like patient ID).
+
+```{r}
+patients_basic <- read_csv("data/patients_basic.csv", show_col_types = FALSE)
+patients_basic
+```
+
+```{r}
+lab_results <- read_csv("data/lab_results.csv", show_col_types = FALSE)
+lab_results
+```
+
+```{r}
+# left_join — ALL patients, add results where available (missing = NA)
+# Most common join in health data
+left_join(patients_basic, lab_results, by = "patient_id")
+```
+
+```{r}
+# inner_join — ONLY patients who have both a record AND results
+inner_join(patients_basic, lab_results, by = "patient_id")
+```
+
+```{r}
+# anti_join — patients with NO results yet
+anti_join(patients_basic, lab_results, by = "patient_id")
+```
+
+```         
+patients_basic: P01  P02  P03  P04  P05
+lab_results:    P01  P02       P04       P06
+
+left_join  → P01  P02  P03  P04  P05     (all from left, NA where missing)
+inner_join → P01  P02       P04           (matched only)
+anti_join  →           P03       P05     (no match in right)
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 07 — Joins *(5 minutes)*
+
+> **Instructions:** Fill in the join function name or the column reference in each blank.
+
+```{r}
+# 1. Keep ALL patients, attach results where available
+#    Hint: left_join keeps all rows from the LEFT (first) table
+___(patients_basic, lab_results, by = "patient_id")
+```
+
+```{r}
+# 2. Keep ONLY patients who have both a record AND lab results
+#    Hint: inner_join — matched rows only
+___(patients_basic, lab_results, by = "patient_id")
+```
+
+```{r}
+# 3. Which patients have NOT been tested yet?
+#    Hint: anti_join — left rows with NO match in right
+___(patients_basic, lab_results, by = "patient_id")
+```
+
+```{r}
+# 4. ★ Left join, then filter to show only patients where cholesterol is NA
+#    Hint: filter(is.na(COLUMN_NAME))
+left_join(patients_basic, lab_results, by = "patient_id") %>%
+  filter(is.na(___))
+```
+
+```{r}
+# 5. ★★ Full join, add a column "tested" = TRUE if hemoglobin is NOT missing
+#    Hint: !is.na(hemoglobin) — the ! means "NOT"
+full_join(patients_basic, lab_results, by = "patient_id") %>%
+  mutate(tested = !is.na(___))
+```
+
+------------------------------------------------------------------------
+
+## PART 8 — Tidy Data with `tidyr`
+
+------------------------------------------------------------------------
+
+**Three rules of tidy data:**
+
+1.  Each **variable** has its own column
+2.  Each **observation** has its own row
+3.  Each **cell** holds one value
+
+```{r}
+# Load blood pressure data — currently in WIDE format
+bp_wide <- read_csv("data/bp_wide.csv", show_col_types = FALSE)
+bp_wide    # one column per visit
+```
+
+```{r}
+# Convert to LONG (tidy) format using pivot_longer()
+bp_long <- bp_wide %>%
+  pivot_longer(
+    cols      = starts_with("visit"),   # which columns to collapse
+    names_to  = "visit",                # new column: old column names go here
+    values_to = "systolic"              # new column: the values go here
+  )
+
+bp_long    # now one row per patient per visit
+```
+
+```{r}
+# Convert BACK to wide format using pivot_wider()
+bp_long %>%
+  pivot_wider(
+    names_from  = "visit",     # column whose values become column names
+    values_from = "systolic"   # column whose values fill the cells
+  )
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 08 — Pivoting *(6 minutes)*
+
+> **Instructions:** For `pivot_longer()`, fill in: `cols` (which columns to collapse), `names_to` (name for the new column of old names), `values_to` (name for the new column of values). Use quotes around text strings in `names_to` and `values_to`.
+
+```{r}
+# Load glucose monitoring data — wide format (one column per month)
+glucose_monitoring <- read_csv("data/glucose_monitoring.csv", show_col_types = FALSE)
+glucose_monitoring
+```
+
+```{r}
+# 1. Convert to LONG format
+#    We want 3 columns: patient | month | glucose
+#    Hint: cols = starts_with("month"), names_to = "month", values_to = "glucose"
+glucose_long <- glucose_monitoring %>%
+  pivot_longer(
+    cols      = starts_with("___"),   # collapse all month_* columns
+    names_to  = "___",                # new column: will hold "month_1", "month_2"...
+    values_to = "___"                 # new column: will hold the glucose values
+  )
+
+glucose_long   # check: should have 16 rows (4 patients × 4 months)
+```
+
+```{r}
+# 2. Average glucose per patient (across all 4 months)
+#    Hint: group_by(patient) then summarise(avg_glucose = mean(glucose))
+glucose_long %>%
+  group_by(___) %>%
+  summarise(avg_glucose = mean(___))
+```
+
+```{r}
+# 3. ★ Which patient improved the MOST from month_1 to month_4?
+#    Hint: filter month_1 and month_4, pivot_wider, mutate(improvement = month_1 - month_4)
+glucose_long %>%
+  filter(month %in% c("___", "___")) %>%
+  pivot_wider(names_from = "___", values_from = "___") %>%
+  mutate(improvement = month_1 - month_4) %>%
+  arrange(desc(improvement))
+```
+
+------------------------------------------------------------------------
+
+## PART 9 — End-to-End Pipeline
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 09 — Full Pipeline *(10 minutes)*
+
+> **Context:** A district health office needs to compare disease burden using **incidence rate per 100,000 people** (cases ÷ population × 100,000), which adjusts for different population sizes.
+>
+> **Instructions:** Build the pipeline one step at a time. Run each step, check the output, then add the next pipe.
+
+```{r}
+disease_data <- read_csv("data/disease_data.csv", show_col_types = FALSE)
+disease_data
+```
+
+```{r}
+# Step 1: Filter — keep only year 2022 data
+#    Hint: filter(year == 2022)
+disease_data %>%
+  filter(year == ___)
+```
+
+```{r}
+# Step 2: Add to Step 1 — remove the "disease" column
+#    Hint: select(-disease)
+disease_data %>%
+  filter(year == 2022) %>%
+  select(-___)
+```
+
+```{r}
+# Step 3: Add to Step 2 — calculate rate per 100,000 people
+#    Formula: (cases / population) * 100000, rounded to 2 decimal places
+disease_data %>%
+  filter(year == 2022) %>%
+  select(-disease) %>%
+  mutate(rate_per_100k = round((___ / ___) * 100000, 2))
+```
+
+```{r}
+# Step 4: Add to Step 3 — what is the AVERAGE rate across all 2022 districts?
+#    Hint: summarise(avg_rate = mean(rate_per_100k))
+disease_data %>%
+  filter(year == 2022) %>%
+  select(-disease) %>%
+  mutate(rate_per_100k = round((cases / population) * 100000, 2)) %>%
+  summarise(avg_rate = mean(___))
+```
+
+```{r}
+# Step 5: ★ Which district has the HIGHEST rate in 2022?
+#    Hint: arrange(desc(rate_per_100k)) after the mutate step
+disease_data %>%
+  filter(year == 2022) %>%
+  mutate(rate_per_100k = round((cases / population) * 100000, 2)) %>%
+  arrange(desc(___))
+```
+
+------------------------------------------------------------------------
+
+## 🧬 Case Study — Introduction to Genomics Data
+
+------------------------------------------------------------------------
+
+> *"Everything you practiced today with patient data applies directly to genomics data. The functions are the same — only the biology changes."*
+
+------------------------------------------------------------------------
+
+### Key Terms
+
+| Term | What It Means | Health Analogy |
+|------------------------|------------------------|------------------------|
+| **Gene** | Segment of DNA producing a protein | A specific blood test |
+| **Expression** | How actively a gene is used | The test result value |
+| **RNA-seq** | Technique counting all active genes in a sample | Running all blood tests at once |
+| **Count / CPM** | Normalized times a gene was detected | The measurement reading |
+| **Sample** | One biological specimen | One patient visit |
+| **Condition** | Experimental group | Control vs Treatment |
+| **log2(Count + 1)** | Log-scale transformation | Compresses huge value ranges |
+| **Fold change** | Treated ÷ Control | "2× higher" or "4× lower" |
+
+> **Why `log2(Count + 1)`?** Gene counts range from 0 to 100,000+. Log2 makes all genes visible in one plot. A difference of 1 on log2 = 2× more expression. The `+1` prevents `log2(0) = -Inf`.
+
+------------------------------------------------------------------------
+
+### The Count Matrix Structure
+
+```{r}
+rnaseq_wide <- read_csv("data/rnaseq_counts_raw.csv", show_col_types = FALSE)
+rnaseq_wide    # wide format: one column per sample
+```
+
+```{r}
+# Reshape to long format — same pivot_longer() you just practiced!
+rnaseq_long <- rnaseq_wide %>%
+  pivot_longer(
+    cols      = starts_with("Control") | starts_with("Treated"),
+    names_to  = "sample",
+    values_to = "count"
+  )
+
+rnaseq_long
+```
+
+```{r}
+# Load sample metadata and join — same left_join() you just practiced!
+sample_meta <- read_csv("data/sample_meta.csv", show_col_types = FALSE)
+
+rnaseq_full <- left_join(rnaseq_long, sample_meta, by = "sample")
+rnaseq_full
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Case Study Exercise — RNA-seq Manipulation *(10 minutes)*
+
+> **Context:** RNA-seq experiment comparing **Control** vs **Drug-treated** cells. Apply Day 3 skills to real genomics data.
+>
+> **Instructions:** Fill in the blanks. Steps 1–4 use functions you already know from today.
+
+```{r}
+counts_raw  <- read_csv("data/rnaseq_counts_raw.csv", show_col_types = FALSE)
+sample_meta <- read_csv("data/sample_meta.csv", show_col_types = FALSE)
+
+counts_raw
+sample_meta
+```
+
+```{r}
+# Step 1: Reshape to long format
+#    We want 3 columns: gene_name | sample | cpm
+#    Hint: cols = starts_with("Control") | starts_with("Treated")
+counts_long <- counts_raw %>%
+  pivot_longer(
+    cols      = starts_with("Control") | starts_with("___"),
+    names_to  = "___",
+    values_to = "___"
+  )
+
+counts_long
+```
+
+```{r}
+# Step 2: Join with sample metadata
+#    Hint: left_join(counts_long, sample_meta, by = "sample")
+counts_full <- left_join(___, ___, by = "___")
+counts_full
+```
+
+```{r}
+# Step 3: Average CPM per gene per condition
+#    Hint: group_by(gene_name, condition) then summarise(avg_cpm = round(mean(cpm), 1))
+avg_expression <- counts_full %>%
+  group_by(___, ___) %>%
+  summarise(avg_cpm = round(mean(___), 1), .groups = "drop")
+
+avg_expression
+```
+
+```{r}
+# Step 4: Which 3 genes are most highly expressed in each condition?
+#    Hint: group_by(condition) then slice_max(avg_cpm, n = 3)
+avg_expression %>%
+  group_by(___) %>%
+  slice_max(___, n = 3)
+```
+
+```{r}
+# Step 5: ★ Calculate fold change (Treated ÷ Control) and log2 fold change
+#    Hint: pivot_wider(names_from = condition, values_from = avg_cpm)
+#    Then: mutate(fold_change = Treated / Control)
+#          mutate(log2_fc = log2(Treated / Control))
+#          mutate(direction = case_when(log2_fc > 1 ~ "Up-regulated",
+#                                       log2_fc < -1 ~ "Down-regulated",
+#                                       TRUE ~ "No change"))
+avg_expression %>%
+  pivot_wider(names_from = ___, values_from = ___) %>%
+  mutate(
+    fold_change = round(Treated / ___, 2),
+    log2_fc     = round(log2(Treated / ___), 2),
+    direction   = case_when(
+      log2_fc > ___  ~ "Up-regulated",
+      log2_fc < ___  ~ "Down-regulated",
+      TRUE           ~ "No change"
+    )
+  ) %>%
+  arrange(desc(abs(log2_fc)))
+```
+
+> 🔍 Which genes are up-regulated by the drug? VEGF and HIF1A going up together is a known hypoxia/tumor pattern in biology.
+
+------------------------------------------------------------------------
+
+## DAY 3 RECAP
+
+| Skill          | Key Functions                                              |
+|------------------------------------|------------------------------------|
+| Load data      | `read_csv()`, `write_csv()`, `read_excel()`                |
+| Missing values | `is.na()`, `drop_na()`, `replace_na()`, `na.rm = TRUE`     |
+| Pipe           | `%>%`                                                      |
+| Choose columns | `select()`, `starts_with()`, `ends_with()`                 |
+| Choose rows    | `filter()` + logical operators                             |
+| Add columns    | `mutate()`, `if_else()`, `case_when()`                     |
+| Sort           | `arrange()`, `arrange(desc(...))`                          |
+| Helpers        | `count()`, `distinct()`, `slice_max()`, `n_distinct()`     |
+| Text           | `str_detect()`, `str_replace()`, `str_sub()`, `str_trim()` |
+| Summarize      | `group_by()` + `summarise()`                               |
+| Joins          | `left_join()`, `inner_join()`, `anti_join()`               |
+| Reshape        | `pivot_longer()`, `pivot_wider()`                          |
+
+------------------------------------------------------------------------
+
+## 📎 Quick Reference
+
+```{r}
+#| eval: false
+
+# ── PIPE ──────────────────────────────
+df %>% step1() %>% step2() %>% step3()
+
+# ── dplyr ─────────────────────────────
+select(col1, col2)          # keep columns
+select(-col3)               # remove column
+filter(age > 40)
+filter(district %in% c("A","B"))
+mutate(new_col = old_col * 2)
+arrange(desc(glucose))
+group_by(district) %>%
+  summarise(n = n(), avg = mean(value))
+if_else(condition, "Yes", "No")
+case_when(x < 100 ~ "Normal",
+          x <= 125 ~ "Pre-diabetic",
+          TRUE ~ "Diabetic")
+count(district, sort = TRUE)
+distinct(district)
+slice_max(glucose, n = 3)
+
+# ── MISSING VALUES ────────────────────
+colSums(is.na(df))
+mean(df$col, na.rm = TRUE)
+df %>% drop_na()
+df %>% drop_na(column)
+df %>% mutate(col = replace_na(col, 0))
+
+# ── JOINS ─────────────────────────────
+left_join(df1, df2, by = "id")
+inner_join(df1, df2, by = "id")
+anti_join(df1, df2, by = "id")
+
+# ── RESHAPE ───────────────────────────
+pivot_longer(cols = starts_with("visit"),
+             names_to = "visit",
+             values_to = "value")
+pivot_wider(names_from = "visit",
+            values_from = "value")
+```

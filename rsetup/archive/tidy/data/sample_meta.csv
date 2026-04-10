@@ -1,0 +1,5 @@
+sample,condition,replicate
+Control_R1,Control,R1
+Control_R2,Control,R2
+Treated_R1,Treated,R1
+Treated_R2,Treated,R2
