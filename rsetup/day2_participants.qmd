@@ -1,0 +1,481 @@
+---
+title: "R in Action: Code, Analyze & Contribute"
+subtitle: "Day 2 — Working with Data Frames | Participant Workbook"
+author: "R User Group Nepal × KU Biotechnology Creatives"
+date: "April 10, 2026"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+---
+
+# DAY 2 — Friday, April 10
+
+**R User Group Nepal × Kathmandu University Biotechnology Creatives** *Online · 8:00 PM – 10:00 PM (Nepal Standard Time)*
+
+**What you will be able to do after today:**
+
+-   Write and use functions — including writing a simple one yourself
+-   Create and explore data frames — the main data structure in R
+-   Extract specific rows and columns
+-   Add new calculated columns
+-   Add rows and merge two data frames together
+
+------------------------------------------------------------------------
+
+## 🔁 Quick Recap — Day 1
+
+Answer these before we start:
+
+1.  What is the difference between R and RStudio?
+2.  What does `<-` do?
+3.  What is the difference between `=` and `==`?
+4.  What does `class()` tell you?
+
+------------------------------------------------------------------------
+
+## 🔧 Functions
+
+You have already been using functions: `mean()`, `length()`, `class()` are all functions.
+
+A **function** is a named, reusable block of code that takes an input and produces an output.
+
+```{r}
+# Functions you already know:
+mean(c(118, 142, 112))    # average BP
+length(c("A", "B", "C")) # count
+class(TRUE)               # data type
+```
+
+```{r}
+# More useful functions:
+round(98.612, digits = 1) # round to 1 decimal → 98.6
+sqrt(225)                  # square root → 15
+abs(-12.5)                 # absolute value → 12.5
+nchar("Kathmandu")        # count characters → 9
+toupper("anita")           # uppercase → "ANITA"
+```
+
+**Writing your own function:**
+
+When you repeat the same calculation many times, make it a function — write once, use everywhere.
+
+```{r}
+# BMI = weight(kg) / height(m)^2
+bmi_calculator <- function(weight, height) {
+  bmi <- weight / height ^ 2
+  return(bmi)
+}
+
+# Use it for any patient:
+bmi_calculator(60, 1.65)    # → 22.0
+bmi_calculator(80, 1.75)    # → 26.1
+```
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 01 — Functions
+
+*(3 minutes)*
+
+```{r}
+# 1. Round 36.746 to 1 decimal place (body temperature)
+round( , digits = )
+
+# 2. What is the square root of 400?
+sqrt()
+
+# 3. How many characters in "Bhaktapur"?
+nchar()
+
+```
+
+```{r}
+
+# 4. Write a function called pulse_pressure that calculates:
+#    pulse_pressure = systolic - diastolic
+#    Test it: systolic = 118, diastolic = 78
+
+pulse_pressure <- function(systolic, diastolic) {
+  
+  
+
+}
+
+
+
+pulse_pressure(118, 78)    # expected: 40
+pulse_pressure(158, 95)    # expected: 63
+
+```
+
+```{r}
+
+# 5. Write a function called fahrenheit_to_celsius
+#    Formula: C = (F - 32) * 5/9
+#    Test it with 98.6°F (normal body temperature → should give 37°C)
+
+
+
+
+
+
+
+```
+
+------------------------------------------------------------------------
+
+## 📋 Today's Dataset — Patient Vital Signs
+
+> **Dataset description:** 5 patients visited a community health clinic for a routine checkup. We recorded their name, age, systolic blood pressure (mmHg), resting heart rate (bpm), fasting blood glucose (mg/dL), and whether they have been diagnosed with diabetes.
+>
+> -   **Systolic BP (mmHg):** Normal \< 120 · Elevated 120–129 · High ≥ 130 · Hypertensive crisis \> 180
+> -   **Glucose (mg/dL):** Normal \< 100 · Pre-diabetic 100–125 · Diabetic ≥ 126
+
+| patient | age | systolic | heart_rate | glucose | is_diabetic |
+|---------|-----|----------|------------|---------|-------------|
+| Anita   | 34  | 118      | 72         | 95      | FALSE       |
+| Bikash  | 52  | 142      | 88         | 148     | TRUE        |
+| Chitra  | 28  | 112      | 68         | 88      | FALSE       |
+| Dev     | 61  | 158      | 92         | 172     | TRUE        |
+| Elina   | 45  | 135      | 80         | 115     | FALSE       |
+
+> We will keep building on this dataset throughout the day.
+
+------------------------------------------------------------------------
+
+## 📋 Data Frames — Your Main Tool
+
+A **data frame** is a table. Rows are patients (observations). Columns are measurements (variables).
+
+Think of it as an Excel spreadsheet — but controlled entirely by code.
+
+```{r}
+# Create this dataset — type it exactly as above
+data.frame()
+
+```
+
+
+```{r}
+vital_signs              # please run above dataframe
+
+# These functions help you understand any new dataset
+head(vital_signs, 2)        # first 2 rows
+
+```
+
+```{r}
+tail(vital_signs, 2)        # last 2 rows
+```
+
+```{r}
+nrow(vital_signs)        # number of rows (how many patients?)
+```
+
+```{r}
+ncol(vital_signs)        # number of columns (how many variables?)
+dim(vital_signs)         # rows AND columns
+names(vital_signs)       # column names
+```
+
+```{r}
+str(vital_signs)         # structure: data type of each column
+```
+
+```{r}
+summary(vital_signs)     # basic statistics for every column
+```
+
+> 🏥 **Real habit:** Every time you load a new dataset — always run `head()`, `str()`, and `summary()` first. These three tell you almost everything before you start analysis.
+
+------------------------------------------------------------------------
+
+## 🔍 Extracting Data from a Data Frame
+
+**Method 1 — The `$` operator** (to get one full column):
+
+```{r}
+vital_signs$patient      # all patient names
+vital_signs$systolic     # all systolic BP values
+vital_signs$glucose      # all glucose values
+```
+
+**Method 2 — Square brackets `[row, column]`** (specific rows or cells):
+
+```{r}
+vital_signs[1, ]         # entire first row (Anita's record)
+vital_signs[, 3]         # entire third column (systolic)
+vital_signs[2, 3]        # row 2, column 3 — one value
+vital_signs[1:3, ]       # rows 1 through 3
+
+# Filter rows by condition
+vital_signs[vital_signs$systolic >= 140, ]        # high BP patients
+vital_signs[vital_signs$is_diabetic == TRUE, ]    # diabetic patients
+vital_signs[vital_signs$age < 40, ]               # younger than 40
+```
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 02 — Exploring Data Frames
+
+*(3 minutes)*
+
+```{r}
+# Use vital_signs for all of these.
+
+# 1. Print the whole dataset — how many rows and columns?
+vital_signs
+
+# 2. Show only the patient names column
+vital_signs$
+
+# 3. Show the entire second row (Bikash's data)
+vital_signs[ , ]
+
+# 4. Show all columns for patients with systolic > 130
+vital_signs[vital_signs$ > 130, ]
+
+# 5. What is the average systolic BP?
+mean(vital_signs$)
+
+# 6. What is the highest glucose reading?
+max(vital_signs$)
+```
+
+------------------------------------------------------------------------
+
+## ➕ Add a New Column
+
+Adding a calculated column is one of the most common operations in health data analysis.
+
+```{r}
+# Classify BP: "High" if systolic >= 140, "Normal" otherwise
+vital_signs$bp_status <- ifelse(
+  vital_signs$systolic >= 140,
+  "High",
+  "Normal"
+)
+
+vital_signs
+
+# Classify glucose: "High" if > 126 mg/dL (diabetic threshold)
+vital_signs$glucose_status <- ifelse(
+  vital_signs$glucose > 126,
+  "High",
+  "Normal"
+)
+
+# Flag patients with BOTH high BP and high glucose (dual risk)
+vital_signs$dual_risk <- vital_signs$systolic >= 140 &
+                         vital_signs$glucose > 126
+
+vital_signs
+```
+
+> 💡 `ifelse(CONDITION, value_if_TRUE, value_if_FALSE)` — a compact way to label rows based on a condition. You will use this constantly.
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 03 — Add Columns
+
+*(3 minutes)*
+
+```{r}
+# Using vital_signs:
+
+# 1. Add a column "high_hr": TRUE if heart_rate > 85
+vital_signs$high_hr <- vital_signs$ > 85
+
+# 2. Add a column "age_group":
+#    "Senior" if age >= 50, "Adult" otherwise
+vital_signs$age_group <- ifelse(
+  vital_signs$ >= 50,
+  "",
+  ""
+)
+
+# 3. View the updated data frame — how many columns now?
+vital_signs
+```
+
+------------------------------------------------------------------------
+
+## ➕ Add a New Row
+
+When a new patient record arrives:
+
+```{r}
+# New patient just registered
+new_patient <- data.frame(
+  patient     = "Farhan",
+  age         = 38,
+  systolic    = 128,
+  heart_rate  = 76,
+  glucose     = 102,
+  is_diabetic = FALSE
+)
+
+# Stack the new row onto the existing table
+vital_signs_v2 <- rbind(vital_signs, new_patient)
+
+nrow(vital_signs_v2)    # should now be 6
+tail(vital_signs_v2)    # check the last row
+```
+
+> ⚠️ The new row must have the **exact same column names and types** as the original. Use the base `vital_signs` (before you added bp_status etc.) for `rbind()`.
+
+------------------------------------------------------------------------
+
+## 🔗 Merge Two Data Frames
+
+In real health work, data often lives in separate tables. You join them by a shared column.
+
+```{r}
+# Table 1: Patient registry
+patients_info <- data.frame(
+  patient_id = c("P01","P02","P03"),
+  name       = c("Anita","Bikash","Chitra"),
+  district   = c("Kathmandu","Lalitpur","Bhaktapur")
+)
+
+# Table 2: Blood test results (from a separate lab system)
+blood_tests <- data.frame(
+  patient_id  = c("P01","P02","P03"),
+  hemoglobin  = c(12.1, 14.5, 11.8),
+  cholesterol = c(185, 240, 172)
+)
+
+# Join them by the "patient_id" column
+merged_data <- merge(patients_info, blood_tests, by = "patient_id")
+merged_data
+```
+
+> **Result:** Only patients present in **both** tables appear (inner join by default). You will learn all join types on Day 3.
+
+------------------------------------------------------------------------
+
+## ✏️ Rename a Column
+
+```{r}
+# Check current names
+names(vital_signs)
+
+# Rename "systolic" to "systolic_bp"
+names(vital_signs)[names(vital_signs) == "systolic"] <- "systolic_bp"
+
+# Or rename by position (column 3)
+names(vital_signs)[3] <- "systolic_bp"
+```
+
+------------------------------------------------------------------------
+
+## 🔄 Your Turn 04 — Build a Full Dataset
+
+*(5 minutes)*
+
+> **Context:** A health post collected data from 4 patients on two different diets. Normal fasting glucose = 90 mg/dL.
+
+```{r}
+
+# Step 1: Create the data frame
+diet_study <- data.frame(
+  patient    = c("Gita","Hari","Isha","Jay"),
+  diet_type  = c("Standard","Standard","Low-Carb","Low-Carb"),
+  glucose    = c(105, 98, 82, 79),
+  systolic   = c(128, 135, 118, 122)
+)
+
+# Step 2: View it — how many rows? how many columns?
+
+# Step 3: Add a column "glucose_diff" = glucose - 90
+
+# Step 4: Add a column "above_normal" = TRUE if glucose > 90
+
+# Step 5: Show only the "Low-Carb" rows
+
+# Step 6: What is the average glucose for Low-Carb patients?
+
+# Step 7: Rename "systolic" to "systolic_bp"
+```
+
+------------------------------------------------------------------------
+
+## ☕ Break — 5 Minutes
+
+------------------------------------------------------------------------
+
+## 🔁 Day 2 Recap & What's Next
+
+**Today you learned:**
+
+| Skill | How You Used It |
+|------------------------------------|------------------------------------|
+| Functions | Used `mean()`, `round()`, wrote `bmi_calculator()` and `pulse_pressure()` |
+| Data Frames | Created `vital_signs`, explored with `head()`, `str()`, `summary()` |
+| Extract Data | Used `$`, `[ , ]`, and conditions to filter rows |
+| Add Columns | Used `$` assignment and `ifelse()` |
+| Add Rows | Used `rbind()` |
+| Merge Tables | Used `merge()` to join two data frames |
+| Rename Columns | Used `names()` |
+
+**Day 3 (In-person, Saturday):**
+
+-   Load real data from CSV and Excel files
+-   Write cleaner code using the pipe `%>%`
+-   Use `dplyr` for professional data manipulation
+-   Reshape messy data with `tidyr`
+
+------------------------------------------------------------------------
+
+## 📎 Quick Reference — Day 1 & Day 2
+
+```{r}
+#| eval: false
+# ── VARIABLES ──────────────────────────────
+x            <- 42
+patient_name <- "Anita"
+is_diabetic  <- FALSE
+
+# ── VECTORS ────────────────────────────────
+systolic <- c(118, 125, 132, 145)
+length(systolic)         # count
+mean(systolic)           # average
+max(systolic)            # highest
+systolic[1]              # first element
+systolic[1:3]            # first three elements
+systolic - 120           # subtract from all at once
+
+# ── DATA TYPES ─────────────────────────────
+class(118.5)    # "numeric"
+class("Anita")  # "character"
+class(TRUE)     # "logical"
+class(50L)      # "integer"
+
+# ── DATA FRAME ─────────────────────────────
+df <- data.frame(name = c("A","B"), bp = c(118, 128))
+head(df)                         # first rows
+str(df)                          # structure
+summary(df)                      # quick stats
+nrow(df); ncol(df); names(df)    # dimensions
+
+df$name                          # one column
+df[1, ]                          # one row
+df[df$bp > 120, ]                # filtered rows
+df$new_col <- df$bp - 110        # add column
+rbind(df, new_row)               # add row
+
+# ── MERGE ──────────────────────────────────
+merge(df1, df2, by = "patient_id")
+
+# ── RENAME ─────────────────────────────────
+names(df)[names(df) == "bp"] <- "systolic_bp"
+
+# ── FUNCTIONS ──────────────────────────────
+my_func <- function(x, y) { return(x - y) }
+my_func(118, 78)    # → 40
+
+# ── IFELSE ─────────────────────────────────
+ifelse(df$bp >= 140, "High", "Normal")
+```
