@@ -1,0 +1,6 @@
+"gene_id","gene_name","Control_1","Control_2","Treated_1","Treated_2"
+"ENSG001","TP53",245,312,198,401
+"ENSG002","BRCA1",88,91,450,512
+"ENSG003","MYC",1205,2341,890,987
+"ENSG004","EGFR",412,398,820,791
+"ENSG005","PTEN",325,308,142,158

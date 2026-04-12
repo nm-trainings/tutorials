@@ -1,0 +1,784 @@
+---
+title: "R in Action: Code, Analyze & Contribute"
+subtitle: "Day 4 — Data Visualization with ggplot2 | Participant Workbook"
+author: "R User Group Nepal × KU Biotechnology Creatives"
+date: "April 12, 2026"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+---
+
+# DAY 4 — Sunday, April 12
+
+**In-Person · 9:00 AM – 5:00 PM (Nepal Standard Time)**
+
+**What you will be able to do after today:**
+
+-   Build scatter plots, bar charts, histograms, and boxplots
+-   Map variables to color, shape, size, and transparency
+-   Add reference lines, trend lines, and text annotations
+-   Customize colors using manual palettes and color scales
+-   Build line plots for trends over time
+-   Combine multiple plots with `patchwork`
+-   Use facets for multi-panel figures
+-   Save publication-ready figures as PNG and PDF
+-   Visualize real RNA-seq gene expression data
+-   Build a volcano plot for differential expression
+
+> 💡 **How to use this workbook:** Each **Your Turn** section gives you a **goal or scenario** in plain English. Write the complete ggplot2 code yourself — no blanks to fill in. Use the function reference tables above each section if you need a reminder of what function does what.
+
+------------------------------------------------------------------------
+
+## 📋 Today's Dataset
+
+```{r}
+library(tidyverse)
+
+patients <- read_csv("data/patients_10.csv", show_col_types = FALSE)
+```
+
+```{r}
+head(patients)
+```
+
+```{r}
+glimpse(patients)
+```
+
+> Same 10-patient community health dataset from Day 3. You already know every column — focus entirely on **visualization**.
+
+------------------------------------------------------------------------
+
+## PART 1 — The Grammar of ggplot2
+
+------------------------------------------------------------------------
+
+Every ggplot2 figure is built by **adding layers** with `+`:
+
+```         
+ggplot(data, aes(...))        ← Layer 1: canvas + axes
+  + geom_point()              ← Layer 2: draw marks
+  + geom_smooth()             ← Layer 3: trend line
+  + scale_colour_manual()     ← Layer 4: colors
+  + labs(title, x, y)         ← Layer 5: labels
+  + theme_classic()           ← Layer 6: visual style
+```
+
+------------------------------------------------------------------------
+
+### ggplot2 Function Reference
+
+| Function | What It Does |
+|------------------------------------|------------------------------------|
+| `ggplot(data, aes(...))` | Creates canvas and maps variables to aesthetics |
+| `geom_point()` | Scatter plot — one point per row |
+| `geom_line()` | Connects points in order with lines |
+| `geom_smooth()` | Adds a trend or regression line |
+| `geom_bar()` | Bar chart — counts rows automatically |
+| `geom_col()` | Bar chart — you supply the bar height |
+| `geom_histogram()` | Distribution of one numeric variable |
+| `geom_boxplot()` | Median, IQR, and outliers per group |
+| `geom_jitter()` | Points with small random offset — good for small n |
+| `geom_hline()` / `geom_vline()` | Horizontal / vertical reference line |
+| `geom_text()` / `geom_label()` | Text labels at data positions |
+| `facet_wrap()` / `facet_grid()` | Split into panels per category |
+| `labs()` | Title, axis labels, legend titles, caption |
+| `theme_classic()` | Clean white theme for scientific papers |
+| `scale_colour_manual()` | Exact colors per category |
+| `scale_fill_brewer()` | ColorBrewer palette |
+| `scale_colour_viridis_c()` | Viridis palette for continuous variables |
+| `ggsave()` | Save plot as PNG, PDF, etc. |
+
+------------------------------------------------------------------------
+
+### Your First ggplot2 Plots
+
+```{r}
+# Canvas only — axes appear but nothing drawn
+ggplot(data = patients, mapping = aes(x = age, y = systolic))
+```
+
+```{r}
+# Add geom_point to actually draw the data
+ggplot(data = patients, mapping = aes(x = age, y = systolic)) +
+  geom_point()
+```
+
+------------------------------------------------------------------------
+
+## PART 2 — Aesthetic Mapping
+
+------------------------------------------------------------------------
+
+### Aesthetics Reference
+
+| Aesthetic | Controls | Inside `aes()` (maps variable) | Outside `aes()` (fixed value) |
+|------------------|------------------|------------------|------------------|
+| `x` / `y` | Axis position | Always inside | — |
+| `colour` | Point/line color | `colour = gender` | `colour = "steelblue"` |
+| `fill` | Bar/box fill | `fill = district` | `fill = "tomato"` |
+| `size` | Point size | `size = glucose` | `size = 3` |
+| `shape` | Point shape (0–25) | `shape = gender` | `shape = 16` |
+| `alpha` | Transparency 0–1 | `alpha = glucose` | `alpha = 0.7` |
+| `linetype` | Line style | `linetype = group` | `"solid"`, `"dashed"`, `"dotted"` |
+
+------------------------------------------------------------------------
+
+```{r}
+# MAPPING — colour varies by gender (inside aes) → creates legend
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic, colour = gender)) +
+  geom_point(size = 3)
+```
+
+```{r}
+# SETTING — colour fixed for all (outside aes) → no legend
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "steelblue", size = 3)
+```
+
+```{r}
+# ❌ Common mistake: colour name INSIDE aes() → creates misleading legend
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic, colour = "red")) +
+  geom_point()
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 01 — Build Your First Plots *(5 minutes)*
+
+> **Scenario:** You want to explore whether older patients tend to have higher blood glucose. Build three versions of this scatter plot, each adding one more piece of information. Write the complete code yourself.
+
+```{r}
+# Task 1 — Basic scatter
+# Make a scatter plot of age (x) vs glucose (y).
+# Write the full ggplot() call from scratch.
+
+```
+
+```{r}
+# Task 2 — Add a variable
+# Color the points by district.
+# Does any district cluster at higher glucose values?
+
+```
+
+```{r}
+# Task 3 — Add two variables
+# Color by district AND map gender to point shape.
+# Set point size = 4 and alpha = 0.7 (fixed — outside aes).
+
+```
+
+```{r}
+# Task 4 ★ — Explain the difference
+# Run BOTH versions below. Write a comment explaining what
+# is different about the output and WHY.
+
+# Version (a): colour inside aes
+ggplot(data = patients,
+       mapping = aes(x = age, y = glucose, colour = "coral")) +
+  geom_point(size = 3)
+
+# Version (b): colour outside aes
+ggplot(data = patients,
+       mapping = aes(x = age, y = glucose)) +
+  geom_point(colour = "coral", size = 3)
+
+# Your explanation:
+# (a) ...
+# (b) ...
+```
+
+------------------------------------------------------------------------
+
+## PART 3 — Geoms and Combining Layers
+
+------------------------------------------------------------------------
+
+### Geom Reference
+
+| Geom | Best for | Key arguments |
+|------------------------|------------------------|------------------------|
+| `geom_point()` | Two numbers — scatter | `colour`, `size`, `shape`, `alpha` |
+| `geom_line()` | Ordered/time sequence | `group`, `linewidth`, `linetype` |
+| `geom_smooth()` | Trend or regression | `method = "lm"`, `se = TRUE/FALSE` |
+| `geom_bar()` | Count per category | `fill`, `position` |
+| `geom_col()` | Pre-calculated heights | `fill` |
+| `geom_histogram()` | Distribution | `bins`, `fill`, `alpha` |
+| `geom_boxplot()` | Spread + outliers | `fill`, `alpha` |
+| `geom_jitter()` | All individual points (small n) | `width`, `size`, `alpha` |
+| `geom_hline()` | Horizontal threshold | `yintercept`, `linetype`, `colour` |
+| `geom_vline()` | Vertical threshold | `xintercept`, `linetype`, `colour` |
+| `geom_text()` | Text labels (no background) | `aes(label = col)`, `nudge_y` |
+| `geom_label()` | Text labels (with box) | `aes(label = col)`, `fill` |
+
+------------------------------------------------------------------------
+
+### Building Layers — One at a Time
+
+```{r}
+# Layer 1: just points
+ggplot(data = patients, mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "steelblue", size = 3)
+```
+
+```{r}
+# Layer 2: add a linear trend line
+ggplot(data = patients, mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "steelblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, colour = "tomato")
+```
+
+```{r}
+# Layer 3: add a clinical reference line
+ggplot(data = patients, mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "steelblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, colour = "tomato") +
+  geom_hline(yintercept = 140, linetype = "dashed",
+             colour = "red", linewidth = 0.8)
+```
+
+```{r}
+# Layer 4: add patient name labels for the 3 highest BP patients
+top3_bp <- patients %>% slice_max(systolic, n = 3)
+
+ggplot(data = patients, mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "steelblue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, colour = "tomato") +
+  geom_hline(yintercept = 140, linetype = "dashed", colour = "red") +
+  geom_text(data = top3_bp, aes(label = name),
+            nudge_y = 4, colour = "darkred", size = 3)
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 02 — Layer by Layer *(6 minutes)*
+
+> **Scenario:** Build a clinical summary plot of age vs glucose. Add one layer at a time — run the code after each addition and observe what changes.
+
+```{r}
+# Task 1 — Start
+# Scatter of age (x) vs glucose (y), colored by gender.
+
+```
+
+```{r}
+# Task 2 — Add trend
+# Copy Task 1 and add a linear trend line PER GENDER (se = FALSE).
+# Does the slope differ between males and females?
+
+```
+
+```{r}
+# Task 3 — Add thresholds
+# Copy Task 2 and add:
+# - a horizontal dashed red line at glucose = 126 (diabetic threshold)
+# - a vertical dotted gray line at age = 40
+
+```
+
+```{r}
+# Task 4 ★ — Label the outliers
+# Copy Task 3 and:
+# - Find the 3 highest-glucose patients with slice_max(glucose, n = 3)
+# - Add their names as text labels using geom_text (nudge_y = 6, colour = "darkred")
+# - Add theme_classic()
+# What clinical pattern does this plot reveal?
+
+top3_glucose <- patients %>% slice_max(glucose, n = 3)
+
+```
+
+------------------------------------------------------------------------
+
+## PART 4 — Bar Charts and Distributions
+
+------------------------------------------------------------------------
+
+### Bar Chart Reference
+
+|   | `geom_bar()` | `geom_col()` |
+|------------------------|------------------------|------------------------|
+| Counts rows? | Yes — automatically (only needs `x`) | No — you supply `y` |
+| When to use | Raw data, want counts | After `group_by() %>% summarise()` |
+| `position = "stack"` | Default — stacked bars | Same |
+| `position = "dodge"` | Side-by-side bars | Same |
+| `position = "fill"` | Proportional to 100% | Same |
+
+------------------------------------------------------------------------
+
+```{r}
+# geom_bar() — counts automatically
+ggplot(data = patients, mapping = aes(x = district)) +
+  geom_bar(fill = "steelblue", colour = "white") + theme_classic()
+```
+
+```{r}
+# geom_col() — after you calculate a summary
+patients %>%
+  group_by(district) %>%
+  summarise(avg_glucose = mean(glucose)) %>%
+  ggplot(mapping = aes(x = district, y = avg_glucose, fill = district)) +
+  geom_col() + theme_classic()
+```
+
+```{r}
+# position = "dodge" — side-by-side
+ggplot(data = patients, mapping = aes(x = district, fill = gender)) +
+  geom_bar(position = "dodge") + theme_classic()
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 03 — Bar Charts *(5 minutes)*
+
+> **Scenario:** A district health manager needs a summary of patients and clinical indicators per district. Write each chart from scratch.
+
+```{r}
+# Task 1 — Distribution
+# Bar chart: how many patients are in each district?
+
+```
+
+```{r}
+# Task 2 — Grouped
+# Same counts but split by gender, displayed side by side.
+
+```
+
+```{r}
+# Task 3 — Calculated summary
+# Calculate average glucose per district with group_by + summarise,
+# then display it as a column chart colored by district.
+
+```
+
+```{r}
+# Task 4 ★ — Proportional stacked
+# Add a column "bp_cat" using mutate + case_when:
+#   systolic < 120  → "Normal"
+#   systolic < 130  → "Elevated"
+#   systolic < 140  → "High Stage 1"
+#   TRUE            → "High Stage 2"
+# Then make a stacked bar showing the PROPORTION (position = "fill")
+# of each BP category per district.
+# Add axis labels and a legend title.
+
+```
+
+------------------------------------------------------------------------
+
+### Distribution Reference
+
+| Geom | Best for | Key arguments |
+|------------------------|------------------------|------------------------|
+| `geom_histogram()` | Single variable distribution | `bins`, `fill`, `colour`, `alpha`, `position = "identity"` |
+| `geom_boxplot()` | Median + IQR + outliers per group | `fill`, `alpha` |
+| `geom_jitter()` | All individual points (small n) | `width`, `size`, `alpha` |
+| `geom_hline()` | Clinical threshold | `yintercept`, `linetype` |
+| `annotate("text", x, y, label)` | Free-floating text annotation | `x`, `y`, `label`, `size`, `hjust` |
+
+> **Boxplot anatomy:** Middle line = median · Box = 25th–75th percentile (IQR) · Whiskers = 1.5 × IQR · Points beyond whiskers = outliers
+
+------------------------------------------------------------------------
+
+```{r}
+# Histogram with threshold
+ggplot(data = patients, mapping = aes(x = systolic)) +
+  geom_histogram(bins = 6, fill = "steelblue", colour = "white") +
+  geom_vline(xintercept = 140, linetype = "dashed", colour = "red") +
+  theme_classic()
+```
+
+```{r}
+# Boxplot + jitter — shows summary AND individual points
+ggplot(data = patients,
+       mapping = aes(x = gender, y = systolic, fill = gender)) +
+  geom_boxplot(alpha = 0.4) +
+  geom_jitter(width = 0.15, size = 2.5) +
+  theme_classic()
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 04 — Distributions *(5 minutes)*
+
+> **Scenario:** Use distributions to describe the clinical profile of your patients.
+
+```{r}
+# Task 1 — Age distribution
+# Make a histogram of age with an appropriate number of bins.
+# Add a vertical line at age = 60 (where "senior" starts).
+
+```
+
+```{r}
+# Task 2 — Glucose by group
+# Boxplot of glucose by district, filled by district.
+# Add geom_jitter on TOP (width = 0.2, size = 2, alpha = 0.6).
+# Use theme_classic().
+
+```
+
+```{r}
+# Task 3 ★ — Overlapping histograms
+# Show the glucose distribution for male and female patients
+# on the SAME histogram (alpha = 0.55, position = "identity", bins = 7).
+# Add a dashed black line at glucose = 126 (diabetic threshold).
+# Add a free text annotation "Diabetic threshold" near the line
+# using annotate("text", x = 130, y = 2.5, label = "...", hjust = 0, size = 3.2).
+# Which gender has more patients above 126?
+
+```
+
+------------------------------------------------------------------------
+
+## PART 5 — Color Scales
+
+------------------------------------------------------------------------
+
+### Color Scale Reference
+
+| Function | When to Use | Example |
+|------------------------|------------------------|------------------------|
+| `scale_colour_manual()` | Exact colors for `colour` aesthetic | `values = c("F" = "coral", "M" = "steelblue")` |
+| `scale_fill_manual()` | Exact colors for `fill` aesthetic | `values = c("Kathmandu" = "#E76F51")` |
+| `scale_fill_brewer()` | ColorBrewer palettes for `fill` | `palette = "Set2"` |
+| `scale_colour_brewer()` | ColorBrewer palettes for `colour` | `palette = "Dark2"` |
+| `scale_colour_viridis_c()` | Continuous variable — perceptually uniform | *(no arguments needed)* |
+| `scale_fill_viridis_d()` | Discrete/categorical — viridis family | `option = "plasma"` |
+| `scale_x_continuous()` | x-axis limits and tick marks | `limits = c(0,100), breaks = seq(0,100,20)` |
+| `scale_y_continuous()` | y-axis limits and tick marks | same format |
+
+------------------------------------------------------------------------
+
+```{r}
+# Manual colors
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic, colour = gender)) +
+  geom_point(size = 3) +
+  scale_colour_manual(values = c("F" = "coral", "M" = "steelblue")) +
+  theme_classic()
+```
+
+```{r}
+# Brewer palette
+ggplot(data = patients,
+       mapping = aes(x = district, fill = gender)) +
+  geom_bar(position = "dodge") +
+  scale_fill_brewer(palette = "Set2") + theme_classic()
+```
+
+```{r}
+# Viridis for continuous variable
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic, colour = glucose)) +
+  geom_point(size = 4) +
+  scale_colour_viridis_c() + theme_classic()
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 05 — Color and Scales *(5 minutes)*
+
+> **Scenario:** The report needs polished, accessible figures. Write each plot from scratch.
+
+```{r}
+# Task 1 — Colorblind-safe palette
+# Scatter: age vs systolic, colored by gender.
+# Use Wong colorblind-safe colors: F = "#E69F00", M = "#56B4E9".
+# Add theme_classic().
+
+```
+
+```{r}
+# Task 2 — Brewer palette
+# Bar chart: district counts, fill by district.
+# Try palette = "Dark2". Then try "Paired".
+# Which looks better for a printed report? Add a comment with your choice.
+
+```
+
+```{r}
+# Task 3 ★ — Combined: viridis + axis control + threshold + save
+# Scatter: age (x) vs systolic (y), colored by glucose (viridis continuous scale).
+# Set x-axis: limits 20–70, ticks every 10 years.
+# Set y-axis: limits 100–175, ticks every 25.
+# Add a dashed red line at systolic = 140.
+# Add proper axis labels (x = "Age (years)", y = "Systolic BP (mmHg)").
+# Save as "plots/bp_glucose_viridis.png", width = 7, height = 5, dpi = 300.
+
+```
+
+------------------------------------------------------------------------
+
+## PART 6 — Themes, Labels, and Saving
+
+------------------------------------------------------------------------
+
+### Theme and Labeling Reference
+
+| Function | What It Does |
+|------------------------------------|------------------------------------|
+| `theme_classic()` | White background, no gridlines — best for papers |
+| `theme_bw()` | White background with gridlines |
+| `theme_minimal()` | Very clean, faint gridlines |
+| `theme(...)` | Fine-tune individual elements: axis text, titles, legend |
+| `element_text(size, face, colour)` | Style text inside `theme()` |
+| `element_blank()` | Remove an element inside `theme()` |
+| `labs(title, subtitle, x, y, colour, fill, caption)` | All text labels at once |
+| `ggsave("file.png", width, height, dpi)` | Export — use `dpi = 300` for publications |
+
+------------------------------------------------------------------------
+
+```{r}
+p <- ggplot(patients, aes(x = age, y = systolic, colour = gender)) +
+     geom_point(size = 3)
+```
+
+```{r}
+p + theme_classic()
+```
+
+```{r}
+p + theme_classic() +
+  labs(
+    title    = "Systolic BP vs Age",
+    subtitle = "Kathmandu Valley Community Health Screening 2024",
+    x        = "Age (years)",
+    y        = "Systolic Blood Pressure (mmHg)",
+    colour   = "Gender",
+    caption  = "Source: R User Group Nepal workshop dataset"
+  )
+```
+
+```{r}
+p + theme_classic() +
+  theme(
+    axis.title      = element_text(size = 13, face = "bold"),
+    plot.title      = element_text(size = 15, face = "bold"),
+    legend.position = "top"
+  ) +
+  labs(title = "Systolic BP vs Age",
+       x = "Age (years)", y = "Systolic BP (mmHg)")
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 06 — Publication Figure *(6 minutes)*
+
+> **Scenario:** Write a final figure for a community health report. No starter code — write the complete plot from the specification.
+
+```{r}
+# Task — Complete publication plot
+# Data: patients
+# X / Y: age / systolic
+# Color: gender — manual: F = "coral", M = "steelblue"
+# Layers:
+#   - geom_point (size 3, alpha 0.85)
+#   - geom_smooth, linear trend per gender, no confidence band
+#   - geom_hline at systolic = 140 (dashed, gray)
+# Theme: theme_classic()
+# Labels: meaningful title, subtitle, x/y axis labels, legend title
+# Save: "plots/health_screening_bp.png", width = 8, height = 5, dpi = 300
+
+```
+
+```{r}
+# Task ★ — Combined patchwork figure
+# Build a second plot for age vs glucose (same colors + theme).
+# Use patchwork to place them side by side with labels A and B.
+# Save the combined figure.
+
+library(patchwork)
+
+```
+
+------------------------------------------------------------------------
+
+## PART 7 — Facets
+
+------------------------------------------------------------------------
+
+### Facet Reference
+
+| Function | What It Does | Key Arguments |
+|------------------------|------------------------|------------------------|
+| `facet_wrap(~ var)` | One panel per level, wrapped in a grid | `ncol`, `nrow`, `scales` |
+| `facet_grid(row ~ col)` | Strict row × column layout | Use `.` for "no variable": `facet_grid(gender ~ .)` |
+| `scales = "free_y"` | Each panel has its own y-axis range | Better for within-panel patterns |
+| `scales = "free"` | Both axes free per panel | Use carefully — hides cross-group differences |
+
+------------------------------------------------------------------------
+
+```{r}
+# facet_wrap — one panel per district
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic, colour = gender)) +
+  geom_point(size = 3) +
+  facet_wrap(~ district) + theme_classic()
+```
+
+```{r}
+# facet_grid — rows = gender, columns = district
+ggplot(data = patients,
+       mapping = aes(x = age, y = systolic)) +
+  geom_point(colour = "tomato", size = 2.5) +
+  facet_grid(gender ~ district)
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 07 — Facets and Comparisons *(5 minutes)*
+
+> **Scenario:** The health office needs to understand how clinical indicators vary across districts and between genders.
+
+```{r}
+# Task 1 — Explore by district
+# Scatter of age (x) vs glucose (y), colored by gender.
+# One panel per district using facet_wrap.
+# Does the gender pattern look the same in all three districts?
+
+```
+
+```{r}
+# Task 2 — Two dimensions
+# Boxplot of systolic by gender (x = gender, fill = gender).
+# Use facet_grid with district as ROWS and no column variable.
+# Add theme_classic().
+
+```
+
+```{r}
+# Task 3 ★ — Interpret
+# Boxplot + jitter of glucose per district.
+# Facet by gender as ROWS (facet_grid(gender ~ .)).
+# Add theme_classic() and proper axis labels.
+# After running: which gender-district combination has the
+# highest median glucose? Which has the most spread?
+# Write your interpretation as a comment.
+
+```
+
+------------------------------------------------------------------------
+
+## PART 8 — Line Plots and `patchwork`
+
+------------------------------------------------------------------------
+
+### Line Plot and Patchwork Reference
+
+| Function | What It Does | Key Point |
+|------------------------|------------------------|------------------------|
+| `geom_line()` | Connects points in order | Needs `group` when there are multiple lines |
+| `group = variable` | Inside `aes()` — which rows to connect | Without this all points connect into a zigzag |
+| `p1 + p2` | Plots side by side | From `library(patchwork)` |
+| `p1 / p2` | p1 above p2 |  |
+| `(p1 + p2) / p3` | Two above, one below | Parentheses control grouping |
+| `plot_annotation(tag_levels = "A")` | Panel labels A, B, C | Use `"1"` for numbers |
+
+------------------------------------------------------------------------
+
+```{r}
+glucose_long <- read_csv("data/glucose_long.csv", show_col_types = FALSE)
+glucose_long
+```
+
+```{r}
+# Without group: ggplot connects ALL points — a zigzag mess
+ggplot(data = glucose_long,
+       mapping = aes(x = month, y = glucose, colour = patient)) +
+  geom_line(linewidth = 1) + geom_point(size = 3) + theme_classic()
+```
+
+```{r}
+# With group = patient: one line per patient
+ggplot(data = glucose_long,
+       mapping = aes(x = month, y = glucose,
+                     colour = patient, group = patient)) +
+  geom_line(linewidth = 1) +
+  geom_point(size = 3) +
+  geom_hline(yintercept = 126, linetype = "dashed", colour = "red") +
+  theme_classic() +
+  labs(x = "Month", y = "Fasting Glucose (mg/dL)",
+       title = "Glucose Monitoring Over 4 Months",
+       subtitle = "Dashed = diabetic threshold (126 mg/dL)")
+```
+
+```{r}
+library(patchwork)
+
+p1 <- ggplot(patients, aes(x = age, y = systolic, colour = gender)) +
+  geom_point(size = 3) + theme_classic() + labs(title = "BP vs Age")
+
+p2 <- ggplot(patients, aes(x = age, y = glucose, colour = gender)) +
+  geom_point(size = 3) + theme_classic() + labs(title = "Glucose vs Age")
+
+p3 <- ggplot(patients, aes(x = district, fill = district)) +
+  geom_bar() + theme_classic() + labs(title = "Patients per District")
+```
+
+```{r}
+p1 + p2
+```
+
+```{r}
+(p1 + p2) / p3 + plot_annotation(tag_levels = "A")
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn 08 — Tell a Story *(7 minutes)*
+
+> **Scenario:** You are presenting at a health conference. Build a 3-panel figure that tells the story of BP — over time, per patient, and in context with age. Write all code from scratch.
+
+```{r}
+bp_monitoring <- read_csv("data/bp_monitoring.csv", show_col_types = FALSE)
+bp_monitoring
+```
+
+```{r}
+# Panel A — Trend over visits
+# Line plot: visit (x) vs systolic (y).
+# One colored line per patient using geom_line + geom_point.
+# Add a dashed red line at systolic = 140.
+# Add a proper title and axis labels.
+
+p_a <- 
+
+p_a
+```
+
+```{r}
+# Panel B — Per-patient distribution
+# Boxplot of systolic by patient (x = patient, fill = patient).
+# Add individual data points with geom_jitter.
+# Use theme_classic() and remove the legend (theme(legend.position = "none")).
+
+p_b <- 
+
+p_b
+```
+
+```{r}
+# Panel C — Context from population
+# Scatter from the patients dataset: age (x) vs systolic (y), colored by district.
+# Add a linear trend line (no confidence band).
+
+p_c <- 
+
+p_c
+```
+
+```{r}
+# Task ★ — Combine
+# Place A on top (full width), B and C side by side below.
+# Add panel labels A, B, C.
+# Save as "plots/bp_story.png", width = 12, height = 9, dpi = 300.
+
+```

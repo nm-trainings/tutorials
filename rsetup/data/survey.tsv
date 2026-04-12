@@ -1,0 +1,9 @@
+patient_id	age	weight_kg	height_m	smoker
+P01	34	62	1.62	No
+P02	NA	78	1.75	Yes
+P03	28	NA	1.58	No
+P04	52	88	NA	NA
+P05	NA	55	1.6	No
+P06	61	NA	1.68	Yes
+P07	38	70	1.72	NA
+P08	47	82	NA	No

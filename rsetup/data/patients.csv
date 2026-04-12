@@ -1,0 +1,9 @@
+patient_id,name,age,gender,systolic,heart_rate,glucose,district
+P01,Anita,23,F,112,68,88,Kathmandu
+P02,Bikash,45,M,145,88,152,Lalitpur
+P03,Chitra,31,F,108,72,82,Bhaktapur
+P04,Dev,52,M,162,95,178,Kathmandu
+P05,Elina,28,F,118,70,94,Lalitpur
+P06,Farhan,61,M,155,92,165,Bhaktapur
+P07,Gita,38,F,128,76,105,Kathmandu
+P08,Hari,47,M,138,82,118,Lalitpur

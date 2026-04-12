@@ -1,0 +1,489 @@
+---
+title: "R in Action: Code, Analyze & Contribute"
+subtitle: "Day 4 — RNA-seq Case Study | Participant Workbook"
+author: "R User Group Nepal × KU Biotechnology Creatives"
+date: "April 12, 2026"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+---
+
+------------------------------------------------------------------------
+
+## 🧬 RNA-seq Case Study
+
+------------------------------------------------------------------------
+
+> *"Everything you built today with health data — layers, facets, line plots, patchwork — is exactly the toolkit bioinformaticians use with genomics data."*
+
+This case study uses RNA-seq data from **Fu et al. 2015** (GEO: GSE60450). The study examined gene expression in **basal** and **luminal** mammary cells from mice at three stages: virgin, pregnant, and lactating. There are **2 samples per group × 6 groups = 12 samples total**.
+
+### Key RNA-seq Terminology
+
+| Term | Meaning | Health Analogy |
+|------------------------|------------------------|------------------------|
+| Gene | Unit of DNA coding for a protein | A specific blood test |
+| Expression | How actively a gene is used | The test result value |
+| Count / CPM | Normalized RNA fragments detected | The measurement reading |
+| Sample | One biological specimen | One patient visit |
+| Condition | Experimental group | Control vs Treatment |
+| Replicate | Repeated measurement | Duplicate readings |
+| Differential expression | Gene significantly up/down | Abnormal lab value |
+| log2 fold change | Magnitude of change | 2× higher / lower |
+| p-value / FDR | Statistical confidence | Same as in any test |
+
+| Group Code | Cell Type | Stage     |
+|------------|-----------|-----------|
+| `bvirg`    | Basal     | Virgin    |
+| `bpreg`    | Basal     | Pregnant  |
+| `blact`    | Basal     | Lactating |
+| `lvirg`    | Luminal   | Virgin    |
+| `lpreg`    | Luminal   | Pregnant  |
+| `llact`    | Luminal   | Lactating |
+
+------------------------------------------------------------------------
+
+```{r}
+library(tidyverse)
+```
+
+------------------------------------------------------------------------
+
+## Steps 1–3: Load, Explore, Reshape
+
+### 🔄 Your Turn CS-01 — Load & Explore *(5 minutes)*
+
+> **Scenario:** Two CSV files are waiting in the `data/` folder. Load them, rename the first column of each, and do a quick exploration.
+
+```{r}
+# Load the counts file (CPM and TMM normalized data)
+# Filename: GSE60450_GeneLevel_Normalized(CPM.and.TMM)_data.csv
+counts <- read_csv("data/___", show_col_types = FALSE)
+
+# Load the sample metadata file
+# Filename: GSE60450_filtered_metadata.csv
+sampleinfo <- read_csv("data/___", show_col_types = FALSE)
+```
+
+```{r}
+# Explore sampleinfo — try at least 3 of: head(), dim(), tail(), names(), str()
+___(sampleinfo)
+___(sampleinfo)
+___(sampleinfo)
+
+# Look at the first 3 values of the characteristics column
+sampleinfo$___[1:3]
+```
+
+```{r}
+# Rename the first column of each data frame to a cleaner name
+# sampleinfo: first column → "sample_id"
+# counts:     first column → "gene_id"
+colnames(___)[1] <- "sample_id"
+colnames(___)[1] <- "gene_id"
+```
+
+```{r}
+# Quick summary of counts — what range of values do you see?
+summary(___)
+```
+
+------------------------------------------------------------------------
+
+### Reshape: wide → long
+
+The counts file has one column per sample. We need to reshape it so every row is one gene × one sample (long format) — the same idea as when you used `pivot_longer()` in the tidyr session.
+
+```{r}
+# pivot_longer: collect all sample columns (everything except gene_id and gene_symbol)
+# into two new columns: Sample (the old column name) and Count (the value)
+seqdata <- pivot_longer(
+  counts,
+  cols      = -c("___", "___"),   # exclude these two identifier columns
+  names_to  = "___",              # new column for old column names
+  values_to = "___"               # new column for the expression values
+)
+
+# How many rows does seqdata have now?  (expect: n_genes × 12)
+nrow(seqdata)
+```
+
+------------------------------------------------------------------------
+
+## Steps 4–7: Join, QC, Label Groups
+
+### 🔄 Your Turn CS-02 — Join & QC Plot *(5 minutes)*
+
+> **Scenario:** Combine the expression data with sample metadata, then make a quality-check boxplot to confirm all 12 samples are comparable.
+
+```{r}
+# Join seqdata (Sample column) with sampleinfo (sample_id column)
+# Use full_join() — same pattern as joining two data frames in dplyr
+allinfo <- full_join(
+  seqdata,
+  sampleinfo,
+  by = join_by(___ == ___)   # seqdata column == sampleinfo column
+)
+
+allinfo
+```
+
+```{r}
+# QC boxplot: one box per sample, y-axis = log2(Count + 1)
+# We add + 1 before log2 to handle zero counts (log2(0) is undefined)
+# Rotate x-axis labels 90° so sample names don't overlap
+ggplot(data = allinfo,
+       mapping = aes(x = ___, y = log2(___ + 1))) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = ___)) +
+  labs(title = "Quality check: all samples comparable?",
+       y     = "log2(CPM + 1)")
+```
+
+```{r}
+# Colour the boxes — add fill = Sample inside aes()
+# Does this make it easier to see which samples stand out?
+ggplot(data = allinfo,
+       mapping = aes(x = Sample, y = log2(Count + 1), fill = ___)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5))
+```
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn CS-03 — Label the Groups *(5 minutes)*
+
+> **Scenario:** The `characteristics` column contains long strings like `"cell type: basal; developmental stage: virgin"`. Use `case_when()` and `str_detect()` to create short, clean group labels.
+
+```{r}
+# Create a new column "Group" using mutate() + case_when()
+# str_detect() checks if the characteristics string contains a pattern
+# Pattern "basal.*virgin" means: "basal" followed anywhere by "virgin"
+allinfo <- mutate(allinfo, Group = case_when(
+  str_detect(characteristics, "basal.*virgin")   ~ "___",   # → "bvirg"
+  str_detect(characteristics, "basal.*preg")     ~ "___",   # → "bpreg"
+  str_detect(characteristics, "basal.*lact")     ~ "___",   # → "blact"
+  str_detect(characteristics, "luminal.*virgin") ~ "___",   # → "lvirg"
+  str_detect(characteristics, "luminal.*preg")   ~ "___",   # → "lpreg"
+  str_detect(characteristics, "luminal.*lact")   ~ "___"    # → "llact"
+))
+
+# Check: should be 2 samples per group (2 replicates × n_genes rows each)
+table(allinfo$___)
+```
+
+------------------------------------------------------------------------
+
+## Steps 8–12: Select Top Genes and Plot
+
+### 🔄 Your Turn CS-04 — Expression Plot *(8 minutes)*
+
+> **Scenario:** Find the 8 most highly expressed genes across all samples, then visualise their expression by group using jitter + facets.
+
+```{r}
+# Use a dplyr pipe to:
+#   1. group_by gene_symbol
+#   2. summarise: total_count = sum(Count)
+#   3. arrange by total_count descending
+#   4. take the top 8 with head(n = 8)
+#   5. pull just the gene_symbol column as a vector
+top_genes <- allinfo %>%
+  group_by(___) %>%
+  summarise(total_count = ___(Count)) %>%
+  arrange(___(total_count)) %>%
+  head(n = ___) %>%
+  pull(___)
+
+top_genes
+
+# Filter allinfo to only the top genes
+mygenes_counts <- filter(allinfo, gene_symbol %in% ___)
+mygenes_counts
+```
+
+```{r}
+# Basic jitter plot — one panel per gene (facet_wrap)
+# Map colour to Group
+ggplot(data = mygenes_counts,
+       mapping = aes(x = ___, y = log2(Count + 1), colour = ___)) +
+  geom_jitter(size = 3, width = ___) +
+  facet_wrap(~ ___) +
+  theme_classic()
+```
+
+```{r}
+# Customise: apply manual colours and proper axis labels
+# 6 colours for 6 groups — pick your own if you like!
+mycolours <- c("turquoise", "plum", "tomato", "violet", "steelblue", "chocolate")
+
+ggplot(data = mygenes_counts,
+       mapping = aes(x = Group, y = log2(Count + 1), colour = Group)) +
+  geom_jitter(size = 3, width = 0.15) +
+  facet_wrap(~ gene_symbol) +
+  scale_colour_manual(values = ___) +
+  labs(x        = "___",
+       y        = "Expression (log2 CPM + 1)",
+       title    = "Mammary Gland Gene Expression",
+       subtitle = "Fu et al. 2015, GSE60450") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        strip.text  = element_text(face = "bold"))
+```
+
+```{r}
+# Fix the x-axis ORDER using factor levels — without this, R sorts alphabetically
+# bvirg → bpreg → blact → lvirg → lpreg → llact (developmental order)
+group_order <- c("bvirg", "bpreg", "blact", "lvirg", "lpreg", "llact")
+
+mygenes_counts <- mutate(mygenes_counts,
+  Group_f = factor(___, levels = ___))
+
+# Check the levels are set correctly
+levels(mygenes_counts$___)
+```
+
+```{r}
+# Final plot using Group_f (ordered factor) on x-axis
+ggplot(data = mygenes_counts,
+       mapping = aes(x = ___, y = log2(Count + 1), colour = ___)) +
+  geom_jitter(size = 3, width = 0.15) +
+  facet_wrap(~ gene_symbol) +
+  scale_colour_manual(values = mycolours) +
+  labs(x        = "Cell Type and Stage",
+       y        = "Expression (log2 CPM + 1)",
+       title    = "Mammary Gland Gene Expression",
+       subtitle = "Fu et al. 2015, GSE60450") +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5),
+        strip.text  = element_text(face = "bold"))
+```
+
+```{r}
+#| eval: false
+# Save the final plot as PNG
+ggsave("plots/mammary_expression.png", width = ___, height = ___, dpi = 300)
+```
+
+------------------------------------------------------------------------
+
+### ✅ Exercises
+
+**Exercise 1:** Replace `mycolours` with 6 colors of your own choice. Try `scale_fill_brewer(palette = "Set2")` as an alternative.
+
+**Exercise 2:** Change `facet_wrap(~ gene_symbol)` to `facet_wrap(~ gene_symbol, ncol = 2)`. What changes in the layout?
+
+**Exercise 3:** Add `geom_boxplot(alpha = 0.2)` as a layer **underneath** the jitter. Which line do you write first?
+
+**Exercise 4:** Filter `mygenes_counts` to only luminal groups (`lvirg`, `lpreg`, `llact`) and remake the plot.
+
+**Exercise 5:** Add `subtitle = "Data: Fu et al. 2015, GEO: GSE60450"` to your labs and save both as PNG and PDF. (Hint: `pdf("myplot.pdf")` ... `dev.off()`)
+
+**Exercise 6 (★):** Add `geom_hline(yintercept = 8, linetype = "dashed", colour = "gray40")` to the plot. What does this horizontal line represent biologically? *(Hint: log2(CPM + 1) = 8 corresponds to \~255 CPM — what does a high CPM mean?)*
+
+```{r}
+# Space for exercises
+
+
+
+
+```
+
+------------------------------------------------------------------------
+
+## 🌋 Volcano Plot — Differential Expression
+
+------------------------------------------------------------------------
+
+### What Is a Volcano Plot?
+
+A volcano plot shows **two statistics simultaneously** for every gene in a differential expression experiment:
+
+-   **X-axis:** `log2 fold change` — direction and size of change (Basal vs Luminal)
+-   **Y-axis:** `-log10(adjusted p-value)` — statistical confidence
+
+Genes that are both **large change** (far left or right) AND **statistically significant** (high up) appear in the "eruption" — these are the biologically interesting genes.
+
+| Region | Meaning |
+|------------------------------------|------------------------------------|
+| Top-right | Significantly **up-regulated** in Basal |
+| Top-left | Significantly **down-regulated** in Basal (= up in Luminal) |
+| Bottom-middle | Changed but not significant — likely noise |
+| Far left/right, low y | Large change but not reliable |
+
+### Why `-log10(p-value)`?
+
+```{r}
+# p-values become very small — hard to read on a linear scale
+# -log10 flips them: larger number = more significant
+-log10(c(0.05, 0.01, 0.001, 0.0001))
+# →     1.3    2.0   3.0    4.0
+# Significance threshold: -log10(0.05) = 1.3
+```
+
+### Typical Cutoffs
+
+| Cutoff        | Value                        | Meaning                 |
+|---------------|------------------------------|-------------------------|
+| Significance  | `p_adjusted < 0.05`          | FDR \< 5%               |
+| Fold change   | `abs(log2_fc) > 1`           | At least 2× change      |
+| Both combined | Top-right / top-left corners | The "interesting" genes |
+
+------------------------------------------------------------------------
+
+### 🔄 Your Turn CS-05 — Volcano Plot *(8 minutes)*
+
+> **Scenario:** Build the signature figure of differential expression analysis step by step. The `de_results` data has columns `gene_name`, `log2_fc`, `p_value`, and `p_adjusted`.
+
+#### Step 1 — Load DE Results
+
+```{r}
+de_results <- read_csv("data/de_results.csv", show_col_types = FALSE)
+head(de_results)
+glimpse(de_results)
+```
+
+#### Step 2 — Add Significance Category
+
+```{r}
+# Add two new columns using mutate():
+#   neg_log10_p  = -log10(p_adjusted)
+#   significance = a category label from case_when()
+#
+# Cutoffs:  p_adjusted < 0.05  AND  |log2_fc| > 1
+de_results <- de_results %>%
+  mutate(
+    neg_log10_p  = -log10(___),
+    significance = case_when(
+      p_adjusted < ___ & log2_fc >  ___ ~ "Up in Basal",
+      p_adjusted < ___ & log2_fc < -___ ~ "Up in Luminal",
+      TRUE                              ~ "Not significant"
+    )
+  )
+
+# How many genes fall into each category?
+de_results %>% count(___)
+```
+
+#### Step 3 — Basic Volcano
+
+```{r}
+# Scatter plot: x = log2_fc, y = neg_log10_p, colour = significance
+ggplot(de_results,
+       aes(x = ___, y = ___, colour = ___)) +
+  geom_point(alpha = 0.7, size = 1.8) +
+  scale_colour_manual(
+    values = c("Up in Basal"     = "tomato",
+               "Up in Luminal"   = "___",
+               "Not significant" = "gray70")
+  ) +
+  theme_classic()
+```
+
+#### Step 4 — Add Threshold Lines
+
+```{r}
+# Add dashed reference lines:
+#   horizontal: at -log10(0.05) — significance threshold
+#   vertical:   at -1 and +1    — fold change thresholds (two lines at once)
+ggplot(de_results,
+       aes(x = log2_fc, y = neg_log10_p, colour = significance)) +
+  geom_point(alpha = 0.7, size = 1.8) +
+  geom_hline(yintercept = -log10(___), linetype = "dashed", colour = "gray40") +
+  geom_vline(xintercept = c(___, ___),  linetype = "dashed", colour = "gray40") +
+  scale_colour_manual(
+    values = c("Up in Basal"     = "tomato",
+               "Up in Luminal"   = "steelblue",
+               "Not significant" = "gray70")
+  ) +
+  theme_classic()
+```
+
+#### Step 5 ★ — Label Top Genes & Save
+
+```{r}
+# Select the 10 most significant genes (highest neg_log10_p) among significant ones
+# Hint: filter() then slice_max(neg_log10_p, n = 10)
+top_sig <- de_results %>%
+  filter(significance != "___") %>%
+  slice_max(___, n = ___)
+
+# Add geom_text() using top_sig as its own data source
+# nudge_y moves labels slightly above the points
+ggplot(de_results,
+       aes(x = log2_fc, y = neg_log10_p, colour = significance)) +
+  geom_point(alpha = 0.6, size = 1.8) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", colour = "gray40") +
+  geom_vline(xintercept = c(-1, 1),     linetype = "dashed", colour = "gray40") +
+  geom_text(data = top_sig,
+            aes(label = ___),
+            size = 2.8, nudge_y = 0.25, colour = "black") +
+  scale_colour_manual(
+    values = c("Up in Basal"     = "tomato",
+               "Up in Luminal"   = "steelblue",
+               "Not significant" = "gray70")
+  ) +
+  labs(x        = "log2 Fold Change (Basal vs Luminal)",
+       y        = "-log10(adjusted p-value)",
+       title    = "Differential Expression: Basal vs Luminal Cells",
+       subtitle = "Fu et al. 2015 · |log2FC| > 1, FDR < 0.05",
+       colour   = NULL) +
+  theme_classic() +
+  theme(legend.position = "top")
+```
+
+```{r}
+#| eval: false
+ggsave("plots/volcano_basal_vs_luminal.png", width = 8, height = 6, dpi = 300)
+```
+
+------------------------------------------------------------------------
+
+## 📎 Full ggplot2 Quick Reference
+
+```{.r}
+#| eval: false
+
+# ── TEMPLATE ────────────────────────────────────────────────────────────────
+ggplot(data, aes(x, y, colour, fill, shape, size, alpha)) +
+  geom_*() +
+  scale_*() +
+  theme_classic() +
+  labs(title, subtitle, x, y, colour, caption) +
+  ggsave("plots/file.png", width = 8, height = 5, dpi = 300)
+
+# ── GEOMS ───────────────────────────────────────────────────────────────────
+geom_point(size = 3, alpha = 0.8)
+geom_jitter(width = 0.15, size = 2.5)
+geom_line(linewidth = 1)
+geom_boxplot(fill = "steelblue", alpha = 0.4)
+geom_histogram(bins = 8, fill = "steelblue")
+geom_hline(yintercept = 8, linetype = "dashed", colour = "gray40")
+geom_vline(xintercept = c(-1, 1), linetype = "dashed")
+geom_text(aes(label = gene_name), nudge_y = 0.25, size = 2.8)
+annotate("text", x = 130, y = 2.5, label = "Threshold", size = 3)
+
+# ── SCALES ──────────────────────────────────────────────────────────────────
+scale_colour_manual(values = c("A" = "tomato", "B" = "steelblue"))
+scale_fill_brewer(palette = "Set2")
+scale_colour_viridis_c()
+
+# ── FACETS ──────────────────────────────────────────────────────────────────
+facet_wrap(~ gene_symbol)
+facet_wrap(~ gene_symbol, ncol = 2, scales = "free_y")
+facet_grid(gender ~ district)
+
+# ── FACTOR ORDERING ─────────────────────────────────────────────────────────
+group_order <- c("bvirg", "bpreg", "blact", "lvirg", "lpreg", "llact")
+mutate(data, Group_f = factor(Group, levels = group_order))
+
+# ── VOLCANO ESSENTIALS ───────────────────────────────────────────────────────
+-log10(p_adjusted)               # y-axis transform
+case_when(...)                   # significance labelling
+slice_max(neg_log10_p, n = 10)   # top genes
+
+# ── SAVE ────────────────────────────────────────────────────────────────────
+ggsave("plots/file.png", width = 10, height = 8, dpi = 300)
+pdf("myplot.pdf"); print(p); dev.off()
+```
