@@ -23,7 +23,7 @@ This case study uses RNA-seq data from **Fu et al. 2015** (GEO: GSE60450). The s
 ### Key RNA-seq Terminology
 
 | Term | Meaning | Health Analogy |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Gene | Unit of DNA coding for a protein | A specific blood test |
 | Expression | How actively a gene is used | The test result value |
 | Count / CPM | Normalized RNA fragments detected | The measurement reading |
@@ -306,7 +306,7 @@ A volcano plot shows **two statistics simultaneously** for every gene in a diffe
 Genes that are both **large change** (far left or right) AND **statistically significant** (high up) appear in the "eruption" — these are the biologically interesting genes.
 
 | Region | Meaning |
-|------------------------------------|------------------------------------|
+|----|----|
 | Top-right | Significantly **up-regulated** in Basal |
 | Top-left | Significantly **down-regulated** in Basal (= up in Luminal) |
 | Bottom-middle | Changed but not significant — likely noise |
@@ -442,7 +442,7 @@ ggsave("plots/volcano_basal_vs_luminal.png", width = 8, height = 6, dpi = 300)
 
 ## 📎 Full ggplot2 Quick Reference
 
-```{.r}
+``` r
 #| eval: false
 
 # ── TEMPLATE ────────────────────────────────────────────────────────────────
